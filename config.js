@@ -1,7 +1,7 @@
 // Free Food Scan settings – edit these on GitHub (pencil icon) whenever you need.
 window.FFS_CONFIG = {
   // Paste your Stripe Payment Link between the quotes, e.g. "https://buy.stripe.com/abc123"
-  PAY_LINK: "",
+  PAY_LINK: "https://buy.stripe.com/00wdR95mifEz5Zv7tv3VC01",
   PRICE: "£3.99",
   FREE_SCANS: 3,
   // Fingerprint of your secret unlock code (the code itself is NOT stored here). Don't change.
