@@ -1,0 +1,24 @@
+{
+  "id": "./",
+  "name": "Free Food Scan",
+  "short_name": "Food Scan",
+  "description": "Scan food barcodes for a score out of 10, every additive explained, healthier swaps and a personal diet score.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1E1033",
+  "theme_color": "#1E1033",
+  "categories": ["food", "health", "lifestyle"],
+  "lang": "en-GB",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "screenshots": [
+    {"src": "screenshot-1.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "Scan any barcode"},
+    {"src": "screenshot-2.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "Score out of 10 with every additive rated"},
+    {"src": "screenshot-3.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "Personal diet score"}
+  ]
+}

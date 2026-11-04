@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1E1033">
+<title>Free Food Scan</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Free Food Scan">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
+<script>if(typeof ZXing==="undefined")document.write('<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"><\/script>');</script>
+<style>
+:root{
+  --bg:#1E1033; --bg2:#160B27; --card:#2D1B4E; --card2:#3A2563; --line:#4B3480;
+  --violet:#7C3AED; --violet2:#9F67FF; --lav:#C4B5FD; --lav2:#E9E3FF; --text:#F5F3FF; --muted:#B9ACDB;
+  --green:#22C55E; --yellow:#FACC15; --amber:#F97316; --red:#EF4444; --grey:#8B80A8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+button,input{font-family:inherit}
+.wrap{max-width:560px;margin:0 auto;padding:calc(16px + env(safe-area-inset-top)) 16px 24px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--violet),var(--lav));display:grid;place-items:center;box-shadow:0 6px 20px rgba(124,58,237,.45)}
+.logo svg{width:22px;height:22px}
+header h1{font-size:20px;font-weight:800;letter-spacing:-.02em}
+header h1 span{color:var(--lav)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:14px}
+.hero{background:linear-gradient(160deg,#3B1F6E 0%,var(--card) 60%);text-align:center;padding:26px 18px}
+.hero h2{font-size:22px;font-weight:800;margin-bottom:6px}
+.hero p{color:var(--muted);font-size:14px;line-height:1.5}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:0;border-radius:16px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;transition:transform .1s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:linear-gradient(135deg,var(--violet),var(--violet2));color:#fff;box-shadow:0 8px 24px rgba(124,58,237,.4)}
+.btn-soft{background:var(--card2);color:var(--lav2);border:1px solid var(--line)}
+.btn svg{width:22px;height:22px}
+.stack>*+*{margin-top:10px}
+.row{display:flex;gap:10px}
+.input{flex:1;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:14px;color:var(--text);font-size:16px;outline:none}
+.input:focus{border-color:var(--lav)}
+.go{background:var(--violet);color:#fff;border:0;border-radius:14px;padding:0 20px;font-weight:700;font-size:15px;cursor:pointer}
+.label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--lav);margin-bottom:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--card2);border:1px solid var(--line);color:var(--lav2);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.note{font-size:13px;color:var(--muted);line-height:1.5}
+.banner{background:rgba(196,181,253,.12);border:1px solid rgba(196,181,253,.35);color:var(--lav2);border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.5;margin-bottom:14px}
+.err{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.4);color:#FECACA}
+/* camera */
+#cam{display:none;position:fixed;inset:0;background:#000;z-index:50;flex-direction:column}
+#cam.on{display:flex}
+#cam video{flex:1;width:100%;object-fit:cover}
+.frame{position:absolute;left:50%;top:42%;width:78%;max-width:380px;aspect-ratio:1.8;transform:translate(-50%,-50%);border-radius:18px;box-shadow:0 0 0 9999px rgba(30,16,51,.55);border:3px solid var(--lav)}
+.frame::after{content:'';position:absolute;left:8%;right:8%;top:50%;height:2px;background:var(--red);box-shadow:0 0 12px var(--red);animation:scan 1.6s ease-in-out infinite}
+@keyframes scan{0%,100%{transform:translateY(-40px)}50%{transform:translateY(40px)}}
+.camtext{position:absolute;top:calc(20px + env(safe-area-inset-top));left:0;right:0;text-align:center;font-weight:700}
+.camclose{position:absolute;bottom:calc(30px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:auto;padding:14px 28px}
+/* result */
+.prod{display:flex;gap:14px;align-items:center}
+.pimg{width:72px;height:72px;border-radius:16px;background:var(--bg2);object-fit:contain;flex-shrink:0;display:grid;place-items:center;overflow:hidden}
+.pimg img{width:100%;height:100%;object-fit:contain;background:#fff}
+.pname{font-size:18px;font-weight:800;line-height:1.25}
+.pbrand{color:var(--muted);font-size:13px;margin-top:3px}
+.scorebox{display:flex;align-items:center;gap:18px;margin-top:16px}
+.ring{width:118px;height:118px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
+.ring>div{width:94px;height:94px;border-radius:50%;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring b{font-size:32px;font-weight:800;line-height:1}
+.ring small{font-size:12px;color:var(--muted);margin-top:2px}
+.bandname{font-size:22px;font-weight:800}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.badge{font-size:11px;font-weight:700;padding:5px 9px;border-radius:8px;background:var(--card2);color:var(--lav2);border:1px solid var(--line)}
+.desc{font-size:14.5px;line-height:1.6;color:var(--lav2)}
+.desc strong{color:#fff}
+.dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.item{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0;padding-top:4px}
+.item .t{font-weight:700;font-size:14.5px}
+.item .t em{font-style:normal;color:var(--muted);font-weight:600;font-size:12.5px;margin-left:6px}
+.item .s{font-size:13px;color:var(--muted);line-height:1.45;margin-top:3px}
+.tier{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:3px 7px;border-radius:6px;margin-left:auto;align-self:flex-start;white-space:nowrap;color:#1E1033}
+.nut{display:grid;grid-template-columns:1fr auto auto;gap:8px 12px;align-items:center;font-size:14px}
+.nut .lv{font-size:11px;font-weight:800;text-transform:uppercase;padding:3px 8px;border-radius:6px;color:#1E1033;text-align:center;min-width:72px}
+.allergen{display:inline-block;background:rgba(249,115,22,.15);color:#FDBA74;border:1px solid rgba(249,115,22,.4);border-radius:8px;padding:4px 9px;font-size:12px;font-weight:700;margin:0 6px 6px 0}
+.back{background:none;border:0;color:var(--lav);font-weight:700;font-size:15px;cursor:pointer;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+/* history */
+.hitem{display:flex;align-items:center;gap:12px;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:10px;cursor:pointer}
+.hthumb{width:48px;height:48px;border-radius:12px;background:var(--bg2);overflow:hidden;flex-shrink:0;display:grid;place-items:center;color:var(--lav);font-weight:800}
+.hthumb img{width:100%;height:100%;object-fit:contain;background:#fff}
+.hinfo{flex:1;min-width:0}
+.hinfo .n{font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hinfo .d{font-size:12px;color:var(--muted);margin-top:2px}
+.hscore{font-weight:800;font-size:15px;padding:7px 10px;border-radius:10px;color:#1E1033;min-width:52px;text-align:center}
+.hdel{background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 6px}
+.filters{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}
+.filters .chip.on{background:var(--violet);color:#fff;border-color:var(--violet)}
+.empty{text-align:center;color:var(--muted);padding:40px 10px;font-size:14px}
+.legend{display:grid;grid-template-columns:auto 1fr;gap:10px 12px;font-size:14px;align-items:center}
+.sw{width:44px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:11px;font-weight:800;color:#1E1033}
+.htable{font-size:13.5px;line-height:1.6;color:var(--lav2)}
+.htable p+p{margin-top:8px}
+/* nav */
+nav{position:fixed;left:0;right:0;bottom:0;background:rgba(22,11,39,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 8px calc(8px + env(safe-area-inset-bottom));z-index:40}
+nav button{background:none;border:0;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;font-weight:700;cursor:pointer;padding:6px 18px;border-radius:12px}
+nav button svg{width:24px;height:24px}
+nav button.on{color:var(--lav);background:rgba(124,58,237,.18)}
+.spinner{width:40px;height:40px;border:4px solid var(--card2);border-top-color:var(--lav);border-radius:50%;animation:spin .8s linear infinite;margin:30px auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+.pill{background:var(--card2);border:1px solid var(--line);color:var(--lav2);border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.pill-on{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.45);color:#86EFAC;cursor:default}
+.modal{display:none;position:fixed;inset:0;z-index:60;background:rgba(10,4,20,.7);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center}
+.modal.on{display:flex}
+.sheet{background:var(--card);border:1px solid var(--line);border-radius:24px 24px 0 0;padding:26px 20px calc(24px + env(safe-area-inset-bottom));width:100%;max-width:560px;text-align:center;animation:up .25s ease-out}
+.sheet h2{font-size:22px;font-weight:800}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.perks{list-style:none;text-align:left;margin:0 auto 18px;max-width:260px;font-size:14px;color:var(--lav2)}
+.perks li{padding:5px 0}.perks li::before{content:"✓ ";color:var(--green);font-weight:800}
+.foot{font-size:11.5px;color:var(--grey);text-align:center;line-height:1.5;margin-top:8px}
+.foot a{color:var(--lav)}
+/* ===== v4 visual refresh ===== */
+@property --p{syntax:'<number>';inherits:false;initial-value:0}
+body{background:
+  radial-gradient(900px 500px at 110% -10%, rgba(124,58,237,.35), transparent 60%),
+  radial-gradient(700px 500px at -20% 30%, rgba(196,181,253,.12), transparent 60%),
+  var(--bg) fixed}
+.card{background:linear-gradient(180deg,rgba(58,37,99,.55),rgba(45,27,78,.9));border:1px solid rgba(196,181,253,.14);box-shadow:0 10px 30px rgba(8,2,20,.35);border-radius:22px}
+.hero{position:relative;overflow:hidden;background:linear-gradient(150deg,#5B2BC9 0%,#3B1F6E 45%,#2D1B4E 100%);border:1px solid rgba(196,181,253,.25);padding:22px 18px 22px}
+.hero h2{font-size:24px;letter-spacing:-.02em}
+.hero .illo{width:150px;height:110px;margin:0 auto 8px;display:block;filter:drop-shadow(0 10px 24px rgba(0,0,0,.35))}
+.hero .glow{position:absolute;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(196,181,253,.35),transparent 70%);top:-80px;right:-60px;pointer-events:none}
+.feat{display:flex;justify-content:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+.feat span{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:999px;padding:6px 11px;font-size:12px;font-weight:700;color:#fff}
+.hero-res{border-color:color-mix(in srgb,var(--bc) 45%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--bc) 20%,transparent),0 18px 40px color-mix(in srgb,var(--bc) 18%,transparent)}
+.pimg{width:84px;height:84px;border-radius:18px;background:#fff1;font-size:30px}
+.pname{font-size:19px}
+.ring{--p:0;background:conic-gradient(var(--c) calc(var(--p)*1%),rgba(255,255,255,.08) 0);animation:fillring 1s cubic-bezier(.2,.8,.2,1)}
+@keyframes fillring{from{--p:0}}
+.ring>div{background:#271743}
+.bars{margin-top:16px;display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:80px 1fr 42px;align-items:center;gap:10px;font-size:12.5px;color:var(--muted);font-weight:600}
+.bar>div{height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--violet),var(--lav));animation:grow .9s ease-out}
+@keyframes grow{from{width:0}}
+.bar b{color:var(--lav2);text-align:right}
+.badge.ns-a{background:#14532D;color:#86EFAC}.badge.ns-b{background:#365314;color:#BEF264}.badge.ns-c{background:#713F12;color:#FDE68A}.badge.ns-d{background:#7C2D12;color:#FDBA74}.badge.ns-e{background:#7F1D1D;color:#FCA5A5}
+.btn.sm{padding:12px;font-size:14px;border-radius:14px}
+.hint{font-size:12px;color:var(--grey);margin:-4px 0 6px}
+.item.tap,.nrow.tap,.swap,.swfrom{cursor:pointer;border-radius:12px;transition:background .15s}
+.item.tap:active,.nrow.tap:active,.swap:active,.swfrom:active{background:rgba(196,181,253,.08)}
+.item .s{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.chev{color:var(--grey);font-size:22px;align-self:center;margin-left:4px;line-height:1}
+.nut{display:block}
+.nrow{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:9px 4px;border-top:1px solid var(--line);font-size:14px}
+.nrow:first-child{border-top:0}
+.ptitle{margin:2px 4px 16px}.ptitle h2{font-size:26px;font-weight:800;letter-spacing:-.02em}.ptitle p{color:var(--muted);font-size:14px;margin-top:4px;line-height:1.5}
+/* detail sheet */
+.dsheet{text-align:left;max-height:86vh;overflow-y:auto}
+.grab{width:40px;height:5px;border-radius:9px;background:var(--line);margin:-12px auto 14px}
+.dtop{display:flex;gap:12px;align-items:center}
+.bigdot{width:18px;height:18px;border-radius:50%;flex-shrink:0;box-shadow:0 0 14px currentColor}
+.dname{font-size:21px;font-weight:800;line-height:1.2}
+.dsub{color:var(--muted);font-size:13px;margin-top:3px}
+.dpill{display:inline-block;margin:12px 0 4px;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:800;color:#1E1033;text-transform:uppercase;letter-spacing:.05em}
+.dsec{background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:10px}
+.dh{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--lav);display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.dp{font-size:14.5px;line-height:1.55;color:var(--lav2)}.dp b{color:#fff}
+/* diet + swaps */
+.habit{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.habit:first-of-type{border-top:0}
+.he{font-size:24px;width:34px;text-align:center}
+.ht{flex:1;font-size:14px;font-weight:700}.ht small{display:block;color:var(--muted);font-weight:500;font-size:12px;margin-top:2px}
+.step{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:4px}
+.step button{width:32px;height:32px;border:0;border-radius:9px;background:var(--card2);color:var(--lav2);font-size:18px;font-weight:800;cursor:pointer}
+.step b{min-width:22px;text-align:center}
+.li{position:relative;padding:8px 0 8px 22px;font-size:14px;line-height:1.5;color:var(--lav2);border-top:1px solid rgba(75,52,128,.5)}
+.li:first-of-type{border-top:0}
+.li::before{position:absolute;left:0;top:8px}
+.li.good::before{content:"✓";color:var(--green);font-weight:800}
+.li.imp::before{content:"•";color:var(--amber);font-weight:800;font-size:18px;top:4px}
+.li.tip::before{content:"→";color:var(--lav)}
+.ditem,.swap,.swfrom{display:flex;align-items:center;gap:12px;padding:10px 4px;border-top:1px solid var(--line)}
+.ditem:first-of-type,.swfrom{border-top:0}
+.ditem select{margin-top:4px;background:var(--bg2);color:var(--lav2);border:1px solid var(--line);border-radius:8px;padding:4px 6px;font-family:inherit;font-size:12px}
+.hthumb.sm{width:42px;height:42px;border-radius:10px;font-size:18px}
+.swlist{margin-top:6px}
+.swlist .btn{margin-top:4px}
+.swfrom .d{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--grey);font-weight:700}
+.spinner.sm{width:26px;height:26px;border-width:3px;margin:10px auto 6px}
+.ring.sm{width:90px;height:90px}.ring.sm>div{width:72px;height:72px}.ring.sm b{font-size:24px}
+#toast{white-space:nowrap;position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--violet);color:#fff;font-weight:700;padding:11px 18px;border-radius:999px;opacity:0;transition:.25s;z-index:80;pointer-events:none;box-shadow:0 10px 30px rgba(124,58,237,.5)}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+nav button{padding:6px 8px;font-size:10.5px;min-width:58px}
+nav button svg{width:23px;height:23px}
+
+.meter{margin-top:10px}.mt{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--lav2);margin-bottom:5px}.mt b{color:var(--muted);font-weight:600}
+.mb{position:relative;height:9px;border-radius:99px;background:rgba(255,255,255,.08);overflow:visible}.mb i{display:block;height:100%;border-radius:99px;animation:grow .9s ease-out}
+.mb u{position:absolute;right:0;top:-3px;bottom:-3px;width:2px;background:rgba(255,255,255,.5);border-radius:2px}
+.form2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form2 label,.flab{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.flab{margin-top:10px}
+.form2 input,.form2 select,.flab select{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--text);font-size:16px;font-family:inherit;text-transform:none;letter-spacing:0;font-weight:500;width:100%}
+.ngrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ngrid div{background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:14px;padding:10px 6px;text-align:center}
+.ngrid b{display:block;font-size:17px;color:#fff}.ngrid span{font-size:11px;color:var(--muted);font-weight:600}
+.drow{display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap}
+.drow input{width:64px;background:var(--bg2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:5px 7px;font-family:inherit;font-size:14px}
+.drow span{font-size:12px;color:var(--muted);font-weight:700}
+.drow select{background:var(--bg2);color:var(--lav2);border:1px solid var(--line);border-radius:8px;padding:5px 6px;font-family:inherit;font-size:12px;max-width:150px}
+.ditem{padding:12px 2px}
+.install{display:flex;align-items:center;gap:12px;padding:14px;margin-bottom:12px;background:linear-gradient(135deg,rgba(124,58,237,.35),rgba(45,27,78,.9))}
+.install b{font-size:15px}.install .go{padding:10px 14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M4 6v12M8 6v12M12 6v12M15 6v12M19 6v12"/></svg></div>
+    <h1>Free Food <span>Scan</span></h1>
+  </header>
+
+  <div id="previewBanner" class="banner hidden">You're viewing a preview inside Claude, where the camera and live product lookups are blocked. Try the demo products below, or open the app from a web address to scan real products.</div>
+
+  <!-- SCAN VIEW -->
+  <section id="v-scan">
+    <div class="card hero"><div class="glow"></div>
+      <svg class="illo" viewBox="0 0 150 110" fill="none">
+        <rect x="45" y="4" width="60" height="102" rx="12" fill="#1E1033" stroke="#C4B5FD" stroke-width="3"/>
+        <rect x="53" y="18" width="44" height="40" rx="6" fill="#F5F3FF"/>
+        <g fill="#1E1033"><rect x="58" y="24" width="3" height="28"/><rect x="63" y="24" width="2" height="28"/><rect x="67" y="24" width="4" height="28"/><rect x="73" y="24" width="2" height="28"/><rect x="77" y="24" width="3" height="28"/><rect x="82" y="24" width="2" height="28"/><rect x="86" y="24" width="4" height="28"/></g>
+        <rect x="50" y="37" width="50" height="2.5" rx="1" fill="#EF4444"/>
+        <circle cx="62" cy="72" r="4.5" fill="#22C55E"/><circle cx="72" cy="72" r="4.5" fill="#FACC15"/><circle cx="82" cy="72" r="4.5" fill="#F97316"/><circle cx="92" cy="72" r="4.5" fill="#EF4444"/>
+        <rect x="56" y="84" width="38" height="5" rx="2.5" fill="#4B3480"/><rect x="56" y="93" width="26" height="5" rx="2.5" fill="#4B3480"/>
+        <circle cx="122" cy="26" r="14" fill="#22C55E"/><text x="122" y="31" text-anchor="middle" font-size="13" font-weight="800" fill="#1E1033" font-family="Plus Jakarta Sans,sans-serif">8.4</text>
+        <circle cx="26" cy="70" r="11" fill="#7C3AED" stroke="#C4B5FD" stroke-width="2"/><text x="26" y="74" text-anchor="middle" font-size="10" font-weight="800" fill="#fff" font-family="Plus Jakarta Sans,sans-serif">E</text>
+      </svg>
+      <h2>What's really in your food?</h2>
+      <p>Scan any barcode for a score out of 10, every additive explained, and healthier swaps.</p>
+      <div class="feat"><span>🧪 Additives rated</span><span>🔄 Swaps</span><span>🥗 Diet score</span></div>
+    </div>
+    <div id="installCard" class="card install hidden"><div style="font-size:26px">📲</div><div style="flex:1"><b>Get the app</b><div class="note">Install Free Food Scan on your home screen – works offline too.</div></div><button class="go" onclick="installApp()">Install</button><button class="hdel" onclick="dismissInstall()" aria-label="Dismiss">×</button></div>
+    <div id="addBanner" class="banner hidden" style="display:flex;align-items:center;gap:10px"><span style="flex:1">🥗 <b>Adding to your diet</b> – scan, upload a photo or type the barcode.</span><button class="chip" onclick="cancelAdd()">Cancel</button></div>
+    <div style="text-align:center;margin:-4px 0 12px"><button id="scanPill" class="pill" onclick="if(!isUnlocked())showPaywall()"></button></div>
+    <div class="stack" style="margin-bottom:14px">
+      <button class="btn btn-primary" id="btnCam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M10 8v8M13 8v8M17 8v8"/></svg>Scan with camera</button>
+      <label class="btn btn-soft" for="fileIn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="15" rx="3"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 5l1.5-2h5L16 5"/></svg>Upload / take photo of barcode</label>
+      <input type="file" id="fileIn" accept="image/*" class="hidden">
+    </div>
+    <div id="scanMsg" class="banner hidden"></div>
+    <div class="card">
+      <div class="label">Type a barcode</div>
+      <form class="row" id="manualForm">
+        <input class="input" id="manual" inputmode="numeric" placeholder="e.g. 5000159484695" autocomplete="off">
+        <button class="go" type="submit">Go</button>
+      </form>
+    </div>
+    <div class="card">
+      <div class="label">Try a demo product</div>
+      <div class="chips" id="demoChips"></div>
+      <p class="note" style="margin-top:10px">Demo items are made-up examples so you can see how scoring works offline.</p>
+    </div>
+  </section>
+
+  <!-- LOADING -->
+  <section id="v-loading" class="hidden">
+    <div class="spinner"></div>
+    <p class="note" style="text-align:center" id="loadText">Looking up product…</p>
+  </section>
+
+  <!-- RESULT -->
+  <section id="v-result" class="hidden"></section>
+
+  <!-- HISTORY -->
+  <section id="v-history" class="hidden">
+    <div class="filters" id="hFilters"></div>
+    <div id="hList"></div>
+  </section>
+
+  <!-- SWAPS -->
+  <section id="v-swaps" class="hidden"></section>
+  <!-- DIET -->
+  <section id="v-diet" class="hidden"></section>
+
+  <!-- ABOUT -->
+  <section id="v-about" class="hidden">
+    <div class="card" id="installInfo"><div class="label">📲 Install the app</div><p class="note" style="margin-bottom:12px">Add Free Food Scan to your home screen so it opens full-screen like any other app, and works offline.</p><button class="btn btn-primary sm" onclick="installApp()">Install Free Food Scan</button></div>
+    <div class="card">
+      <div class="label">How the score works</div>
+      <div class="htable">
+        <p>Every food gets a score out of 10, built from three parts:</p>
+        <p><strong>Nutrition – up to 6 points.</strong> Based on the product's Nutri-Score grade: A gets 6, B gets 4.8, C gets 3.3, D gets 1.8 and E gets 0.6.</p>
+        <p><strong>Additives – up to 3 points.</strong> Start at 3, then take off 0.25 for each yellow additive, 0.75 for each amber one and 1.5 for each red one (it can't go below zero). Green additives cost nothing.</p>
+        <p><strong>Processing – up to 1 point.</strong> Based on the NOVA group: unprocessed (1) gets 1, processed ingredients (2) get 0.8, processed foods (3) get 0.5 and ultra-processed foods (4) get 0.</p>
+        <p><strong>Amounts matter:</strong> labels don't show how much of each additive is used, so for additives with a safe daily limit (ADI) the app estimates the worst case – the legal maximum in one serving – and compares it with the limit for your body weight. If that could be half your daily limit or more, the additive's colour goes up one level.</p>
+        <p><strong>Safety caps:</strong> if a product has any red additive, or a Nutri-Score of E, its score can't go above 4.9.</p>
+        <p><strong>Non-food products</strong> (cosmetics, household) have no nutrition data, so they start at 10 and lose 0.5, 1.5 or 3 points for each yellow, amber or red ingredient.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="label">Colour bands</div>
+      <div class="legend">
+        <div class="sw" style="background:var(--green)">7.5+</div><div><strong>Excellent</strong> – a great everyday choice</div>
+        <div class="sw" style="background:var(--yellow)">5–7.4</div><div><strong>Good</strong> – fine in normal amounts</div>
+        <div class="sw" style="background:var(--amber)">2.5–4.9</div><div><strong>Limit</strong> – have it now and then</div>
+        <div class="sw" style="background:var(--red)">0–2.4</div><div><strong>Avoid</strong> – poor nutrition or a high-risk additive</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="label">Additive colours</div>
+      <div class="legend">
+        <div class="sw" style="background:var(--green)">Low</div><div>No meaningful concern at permitted levels</div>
+        <div class="sw" style="background:var(--yellow)">Limited</div><div>Safe normally; worth limiting for some people</div>
+        <div class="sw" style="background:var(--amber)">Moderate</div><div>Warning labels, over-exposure or study concerns</div>
+        <div class="sw" style="background:var(--red)">High</div><div>Banned in the EU or regulator-level health concern</div>
+      </div>
+      <p class="note" style="margin-top:12px">Ratings draw on EFSA, IARC and UK FSA positions. Many links (e.g. emulsifiers and cancer) come from observational studies, which show association, not proof of harm.</p>
+    </div>
+    <div class="card">
+      <div class="label">Where the data comes from</div>
+      <div class="htable">
+        <p>Each scan checks these in order until one has the product:</p>
+        <p>1–4. <strong>Open Food Facts</strong>, Open Beauty Facts, Open Products Facts and Open Pet Food Facts – free crowd-sourced databases with millions of products, best for the UK and Europe.</p>
+        <p>5. <strong>USDA FoodData Central</strong> – US government database of branded foods. It has no Nutri-Score, so the nutrition part is estimated from fat, sugar and salt levels (drinks are judged on sugar, like Nutri-Score does).</p>
+        <p>6. <strong>UPCitemdb</strong> – general product names and photos only, so no score can be given.</p>
+        <p>When a product has no additive list, additives are picked out of the ingredient text by E-number and name.</p>
+      </div>
+    </div>
+    <p class="foot">Product data from <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a> (ODbL) and the sources above – entries can be incomplete or wrong.<br>For information only, not medical advice.</p>
+  </section>
+</div>
+
+<!-- PAYWALL -->
+<div id="paywall" class="modal"><div class="sheet">
+  <div class="logo" style="margin:0 auto 14px;width:56px;height:56px;border-radius:16px"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" style="width:30px;height:30px"><path d="M4 6v12M8 6v12M12 6v12M15 6v12M19 6v12"/></svg></div>
+  <h2>You've used your free scans</h2>
+  <p class="note" style="margin:8px 0 16px">Unlock unlimited scans forever for <strong id="pwPrice" style="color:#fff"></strong> – a one-off payment, no subscription.</p>
+  <ul class="perks"><li>Unlimited barcode scans</li><li>Every additive rated</li><li>Full scan history</li></ul>
+  <button class="btn btn-primary" id="pwBuy" onclick="buy()"></button>
+  <form onsubmit="redeem(event)" style="margin-top:14px">
+    <div class="note" style="margin-bottom:6px">Have an unlock code?</div>
+    <div class="row"><input class="input" id="pwCode" placeholder="FFS-XXXXXXXXXX" autocomplete="off" autocapitalize="characters"><button class="go" type="submit">Use</button></div>
+  </form>
+  <p class="note" id="pwMsg" style="color:#FCA5A5;margin-top:8px"></p>
+  <button class="back" style="margin:8px auto 0" onclick="hidePaywall()">Not now</button>
+  <p class="foot">Secure payment by Stripe. Your history and past scans stay free to view.</p>
+</div></div>
+<div id="thanks" class="modal"><div class="sheet">
+  <div style="font-size:44px">🎉</div>
+  <h2>Thank you!</h2>
+  <p class="note" id="tyCode" style="margin:10px 0 16px;line-height:1.6"></p>
+  <button class="btn btn-primary" onclick="document.getElementById('thanks').classList.remove('on')">Start scanning</button>
+</div></div>
+
+<!-- CAMERA OVERLAY -->
+<div id="cam">
+  <video id="video" playsinline muted></video>
+  <div class="frame"></div>
+  <div class="camtext">Line the barcode up inside the box<br><span style="font-weight:500;font-size:13px;opacity:.85">Hold about 15 cm away and keep it still so it's sharp</span></div>
+  <button class="btn btn-soft camclose" id="camClose">Cancel</button>
+</div>
+
+<nav>
+  <button data-v="scan" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M10 8v8M13 8v8M17 8v8"/></svg>Scan</button>
+  <button data-v="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>History</button>
+  <button data-v="swaps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4-4 4"/><path d="M21 7H8a4 4 0 0 0-4 4"/><path d="M7 21l-4-4 4-4"/><path d="M3 17h13a4 4 0 0 0 4-4"/></svg>Swaps</button>
+  <button data-v="diet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7c-2-3-7-2.5-7 2.5C5 15 9 20 12 20s7-5 7-10.5C19 4.5 14 4 12 7z"/><path d="M12 7c0-2 1-4 3-5"/></svg>Diet</button>
+  <button data-v="about"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>Info</button>
+</nav>
+<div id="toast"></div>
+<div id="detail" class="modal" onclick="if(event.target===this)closeSheet()"><div class="sheet dsheet"><div class="grab"></div><div class="dbody"></div><button class="btn btn-soft" style="margin-top:16px" onclick="closeSheet()">Close</button></div></div>
+
+<script src="config.js"></script>
+<script>
+/* ================= ADDITIVE DATABASE =================
+   tier: g = low (green), y = limited (yellow), a = moderate (amber), r = high (red) */
+const SOUTH = "One of the 'Southampton six' colours – UK/EU labels must warn it may affect activity and attention in children.";
+const SULPH = "Sulphites are a declared allergen and can trigger asthma; EFSA flags high over-exposure.";
+const PHOS = "High phosphate intake is linked to kidney and heart concerns; EFSA flags over-exposure.";
+const NITR = "Forms nitrosamines; EFSA (2023) calls exposure a health concern. Processed meat is an IARC Group 1 carcinogen.";
+const ADD = {
+ e100:["Curcumin","g","Colour","Turmeric pigment – no concern at permitted levels."],
+ e101:["Riboflavin","g","Colour","Vitamin B2."],
+ e102:["Tartrazine","a","Colour",SOUTH],
+ e104:["Quinoline yellow","a","Colour",SOUTH+" EFSA also lowered its safe daily limit."],
+ e110:["Sunset yellow FCF","a","Colour",SOUTH+" EFSA also lowered its safe daily limit."],
+ e120:["Carmine (cochineal)","y","Colour","Made from insects – rare allergic reactions and not vegan."],
+ e122:["Carmoisine","a","Colour",SOUTH],
+ e124:["Ponceau 4R","a","Colour",SOUTH],
+ e129:["Allura red AC","a","Colour",SOUTH],
+ e131:["Patent blue V","y","Colour","Synthetic dye – rare allergic reactions."],
+ e132:["Indigotine","y","Colour","Synthetic dye – rare allergic reactions."],
+ e133:["Brilliant blue FCF","y","Colour","EFSA flags possible over-exposure in high consumers."],
+ e140:["Chlorophylls","g","Colour","Natural green plant pigment."],
+ e141:["Copper chlorophyllin","g","Colour","Plant pigment – no concern at permitted levels."],
+ e150a:["Plain caramel","g","Colour","Simple heated sugar – no concern."],
+ e150b:["Caustic sulphite caramel","y","Colour","Made with sulphites – low concern."],
+ e150c:["Ammonia caramel","a","Colour","Can contain 4-MEI, a possible carcinogen in animal studies (IARC 2B)."],
+ e150d:["Sulphite ammonia caramel","a","Colour","Can contain 4-MEI, a possible carcinogen in animal studies (IARC 2B)."],
+ e151:["Brilliant black BN","y","Colour","Synthetic dye – limited data, rare intolerance."],
+ e153:["Vegetable carbon","y","Colour","Limited safety data; not permitted in the US."],
+ e155:["Brown HT","y","Colour","Synthetic dye – rare intolerance."],
+ e160a:["Carotenes","g","Colour","Provitamin A pigment (as in carrots)."],
+ e160b:["Annatto","y","Colour","Natural seed extract – rare allergic reactions."],
+ e160c:["Paprika extract","g","Colour","Natural pepper pigment."],
+ e160d:["Lycopene","g","Colour","Tomato pigment – an antioxidant."],
+ e161b:["Lutein","g","Colour","Natural plant pigment."],
+ e162:["Beetroot red","g","Colour","Vegetable extract."],
+ e163:["Anthocyanins","g","Colour","Natural berry/grape pigments."],
+ e170:["Calcium carbonate","g","Colour / mineral","Chalk – a source of calcium."],
+ e171:["Titanium dioxide","r","Colour","EFSA (2021): can no longer be considered safe, as DNA damage couldn't be ruled out. Banned in EU food since 2022 – still allowed in Great Britain."],
+ e172:["Iron oxides","g","Colour","Mineral pigment – no concern."],
+ e200:["Sorbic acid","y","Preservative","Low toxicity, but EFSA flags high over-exposure in some consumers."],
+ e202:["Potassium sorbate","y","Preservative","Low toxicity, but EFSA flags high over-exposure in some consumers."],
+ e210:["Benzoic acid","a","Preservative","Can form benzene with vitamin C; EFSA flags high over-exposure."],
+ e211:["Sodium benzoate","a","Preservative","Can form benzene with vitamin C; part of the Southampton hyperactivity study mix."],
+ e212:["Potassium benzoate","a","Preservative","Can form benzene with vitamin C."],
+ e220:["Sulphur dioxide","a","Preservative",SULPH],
+ e221:["Sodium sulphite","a","Preservative",SULPH],
+ e222:["Sodium bisulphite","a","Preservative",SULPH],
+ e223:["Sodium metabisulphite","a","Preservative",SULPH],
+ e224:["Potassium metabisulphite","a","Preservative",SULPH],
+ e226:["Calcium sulphite","a","Preservative",SULPH],
+ e228:["Potassium bisulphite","a","Preservative",SULPH],
+ e234:["Nisin","g","Preservative","Natural antibacterial made by bacteria."],
+ e235:["Natamycin","y","Preservative","Antifungal – fine on cheese rinds, limited use."],
+ e249:["Potassium nitrite","r","Preservative",NITR],
+ e250:["Sodium nitrite","r","Preservative",NITR],
+ e251:["Sodium nitrate","r","Preservative",NITR],
+ e252:["Potassium nitrate","r","Preservative",NITR],
+ e260:["Acetic acid","g","Acid","Vinegar acid."],
+ e262:["Sodium acetates","g","Acid","Salt of vinegar."],
+ e270:["Lactic acid","g","Acid","Naturally made by fermentation."],
+ e280:["Propionic acid","y","Preservative","Generally safe; some reports of irritability in children."],
+ e281:["Sodium propionate","y","Preservative","Generally safe; some reports of irritability in children."],
+ e282:["Calcium propionate","y","Preservative","Generally safe; some reports of irritability in children."],
+ e290:["Carbon dioxide","g","Gas","Makes drinks fizzy."],
+ e296:["Malic acid","g","Acid","Fruit acid (apples)."],
+ e297:["Fumaric acid","g","Acid","Naturally occurring acid."],
+ e300:["Ascorbic acid","g","Antioxidant","Vitamin C."],
+ e301:["Sodium ascorbate","g","Antioxidant","Form of vitamin C."],
+ e302:["Calcium ascorbate","g","Antioxidant","Form of vitamin C."],
+ e304:["Ascorbyl palmitate","g","Antioxidant","Fat-soluble vitamin C."],
+ e306:["Tocopherols","g","Antioxidant","Vitamin E."],
+ e307:["Alpha-tocopherol","g","Antioxidant","Vitamin E."],
+ e308:["Gamma-tocopherol","g","Antioxidant","Vitamin E."],
+ e309:["Delta-tocopherol","g","Antioxidant","Vitamin E."],
+ e310:["Propyl gallate","a","Antioxidant","Possible allergen; hormone-disruption concerns in lab studies."],
+ e319:["TBHQ","a","Antioxidant","Synthetic antioxidant; immune and lab-study concerns."],
+ e320:["BHA","r","Antioxidant","IARC Group 2B possible carcinogen (tumours in rodents)."],
+ e321:["BHT","y","Antioxidant","Related to BHA but less concern; some uncertainty."],
+ e322:["Lecithins","g","Emulsifier","Usually from soy or sunflower – no concern."],
+ e325:["Sodium lactate","g","Acidity regulator","Salt of lactic acid."],
+ e326:["Potassium lactate","g","Acidity regulator","Salt of lactic acid."],
+ e327:["Calcium lactate","g","Acidity regulator","Salt of lactic acid."],
+ e330:["Citric acid","g","Acid","Naturally in citrus fruit."],
+ e331:["Sodium citrates","g","Acidity regulator","Salt of citric acid."],
+ e332:["Potassium citrates","g","Acidity regulator","Salt of citric acid."],
+ e333:["Calcium citrates","g","Acidity regulator","Salt of citric acid."],
+ e334:["Tartaric acid","g","Acid","Grape acid."],
+ e338:["Phosphoric acid","a","Acid",PHOS],
+ e339:["Sodium phosphates","a","Acidity regulator",PHOS],
+ e340:["Potassium phosphates","a","Acidity regulator",PHOS],
+ e341:["Calcium phosphates","a","Acidity regulator",PHOS],
+ e343:["Magnesium phosphates","a","Acidity regulator",PHOS],
+ e385:["Calcium disodium EDTA","y","Preservative","Binds minerals; safe at permitted levels."],
+ e392:["Rosemary extract","g","Antioxidant","Natural herb extract."],
+ e400:["Alginic acid","g","Thickener","Seaweed fibre."],
+ e401:["Sodium alginate","g","Thickener","Seaweed fibre."],
+ e406:["Agar","g","Thickener","Seaweed gel."],
+ e407:["Carrageenan","a","Thickener","Gut inflammation in animal studies; linked with breast cancer in a large French study (observational). EFSA flags high over-exposure."],
+ e407a:["Processed eucheuma seaweed","a","Thickener","Similar to carrageenan – same concerns."],
+ e410:["Locust bean gum","g","Thickener","Plant fibre from carob seeds."],
+ e412:["Guar gum","g","Thickener","Plant fibre."],
+ e414:["Gum arabic","g","Thickener","Acacia tree sap fibre."],
+ e415:["Xanthan gum","y","Thickener","Generally safe; weak signals in recent observational studies."],
+ e417:["Tara gum","g","Thickener","Plant seed fibre."],
+ e418:["Gellan gum","g","Thickener","Fermented fibre – no concern."],
+ e420:["Sorbitol","y","Sweetener","Laxative effect in large amounts."],
+ e421:["Mannitol","y","Sweetener","Laxative effect in large amounts."],
+ e422:["Glycerol","g","Humectant","Keeps food moist – no concern."],
+ e433:["Polysorbate 80","a","Emulsifier","Damaged the gut lining in animal studies; EFSA flags over-exposure."],
+ e435:["Polysorbate 60","y","Emulsifier","Similar to polysorbate 80 but less studied."],
+ e440:["Pectin","g","Gelling agent","Fruit fibre."],
+ e450:["Diphosphates","a","Raising agent",PHOS],
+ e451:["Triphosphates","a","Stabiliser",PHOS],
+ e452:["Polyphosphates","a","Stabiliser",PHOS],
+ e460:["Cellulose","g","Bulking agent","Plant fibre."],
+ e461:["Methyl cellulose","y","Thickener","Modified fibre – limited concern."],
+ e464:["Hydroxypropyl methyl cellulose","y","Thickener","Modified fibre – limited concern."],
+ e466:["Carboxymethyl cellulose","y","Thickener","Affected gut bacteria in experimental studies."],
+ e471:["Mono- and diglycerides of fatty acids","a","Emulsifier","Linked with higher cancer and heart-disease risk in large observational studies (association, not proof)."],
+ e472a:["Acetic acid esters of mono/diglycerides","y","Emulsifier","Related to E471; less studied."],
+ e472b:["Lactic acid esters of mono/diglycerides","y","Emulsifier","Related to E471; less studied."],
+ e472c:["Citric acid esters of mono/diglycerides","y","Emulsifier","Related to E471; less studied."],
+ e472e:["DATEM","y","Emulsifier","Related to E471; less studied."],
+ e473:["Sucrose esters","y","Emulsifier","Limited concern."],
+ e475:["Polyglycerol esters","y","Emulsifier","Limited concern."],
+ e476:["PGPR","y","Emulsifier","Used in chocolate; limited concern."],
+ e481:["Sodium stearoyl-2-lactylate","a","Emulsifier","EFSA flags high over-exposure; association with breast cancer in a French cohort."],
+ e482:["Calcium stearoyl-2-lactylate","a","Emulsifier","Similar to E481."],
+ e491:["Sorbitan monostearate","y","Emulsifier","Limited concern."],
+ e500:["Sodium carbonates","g","Raising agent","Baking soda."],
+ e501:["Potassium carbonates","g","Raising agent","No concern."],
+ e503:["Ammonium carbonates","g","Raising agent","Breaks down when baked."],
+ e504:["Magnesium carbonates","g","Anti-caking","No concern."],
+ e508:["Potassium chloride","g","Salt substitute","No concern."],
+ e509:["Calcium chloride","g","Firming agent","No concern."],
+ e516:["Calcium sulphate","g","Firming agent","Used to make tofu."],
+ e524:["Sodium hydroxide","g","Acidity regulator","Neutralised during processing."],
+ e551:["Silicon dioxide","y","Anti-caking","Nanoparticle forms under EFSA review."],
+ e554:["Sodium aluminium silicate","a","Anti-caking","Adds aluminium to the diet."],
+ e570:["Fatty acids","g","Anti-caking","Normal food fats."],
+ e575:["Glucono-delta-lactone","g","Acidity regulator","No concern."],
+ e621:["Monosodium glutamate (MSG)","y","Flavour enhancer","Safe at normal use, but high consumers and children may exceed EFSA's daily limit."],
+ e627:["Disodium guanylate","y","Flavour enhancer","Avoid with gout; usually paired with MSG."],
+ e631:["Disodium inosinate","y","Flavour enhancer","Avoid with gout; usually paired with MSG."],
+ e635:["Disodium ribonucleotides","y","Flavour enhancer","Avoid with gout; usually paired with MSG."],
+ e900:["Dimethylpolysiloxane","y","Anti-foaming","Silicone – limited concern."],
+ e901:["Beeswax","g","Glazing agent","Natural wax."],
+ e903:["Carnauba wax","g","Glazing agent","Natural palm wax."],
+ e904:["Shellac","g","Glazing agent","Natural resin; not vegan."],
+ e920:["L-cysteine","g","Flour treatment","Amino acid."],
+ e938:["Argon","g","Packaging gas","Inert gas."],
+ e941:["Nitrogen","g","Packaging gas","Inert gas."],
+ e948:["Oxygen","g","Packaging gas","No concern."],
+ e950:["Acesulfame K","y","Sweetener","Approved sweetener; ongoing debate about sweeteners in general."],
+ e951:["Aspartame","a","Sweetener","IARC 'possibly carcinogenic' (2B, 2023), though its safe daily limit was kept. Not suitable for people with PKU."],
+ e952:["Cyclamate","a","Sweetener","Banned in the US; lower safe limit."],
+ e954:["Saccharin","y","Sweetener","Approved; older cancer fears not confirmed in humans."],
+ e955:["Sucralose","y","Sweetener","Approved; emerging research questions."],
+ e960:["Steviol glycosides","y","Sweetener","Plant sweetener; EFSA flags possible over-exposure."],
+ e961:["Neotame","y","Sweetener","Approved; limited long-term data."],
+ e965:["Maltitol","y","Sweetener","Laxative effect in large amounts."],
+ e966:["Lactitol","y","Sweetener","Laxative effect in large amounts."],
+ e967:["Xylitol","g","Sweetener","Laxative in large amounts; toxic to dogs."],
+ e968:["Erythritol","y","Sweetener","Linked to blood clotting in a 2023 study (observational)."],
+ e1520:["Propylene glycol","y","Humectant","Safe at permitted levels."]
+};
+function lookupAdd(tag){
+  let code = tag.replace(/^[a-z]{2}:/,'').toLowerCase();
+  if(ADD[code]) return {code, d:ADD[code]};
+  const base = code.replace(/(\d+)[a-z]*$/,'$1');          // e322i -> e322
+  if(ADD[base]) return {code, d:ADD[base]};
+  const sub = code.match(/^(e\d+[a-z])/);                    // e150dii -> e150d
+  if(sub && ADD[sub[1]]) return {code, d:ADD[sub[1]]};
+  const n = parseInt(code.slice(1));
+  if(n>=1400 && n<1500) return {code, d:["Modified starch","g","Thickener","Chemically adjusted starch – no concern."]};
+  return {code, d:[code.toUpperCase(),"y","Additive","Not individually reviewed here; approved for use in the UK/EU."]};
+}
+
+const SKIP_NAME=new Set(["e290","e570","e938","e941","e948","e422","e460"]);
+const ALIASES={"mono- and diglycerides":"e471","mono and diglycerides":"e471","msg":"e621","caramel color":"e150d","caramel colour":"e150d","sulfites":"e220","sulphites":"e220","red 40":"e129","yellow 5":"e102","yellow 6":"e110","blue 1":"e133","titanium dioxide":"e171"};
+function detectAdditives(text){
+  const t=" "+text.toLowerCase().replace(/[()\[\],;:.]/g," ")+" ";
+  const found=new Set();
+  (text.match(/\bE ?-?\d{3,4}[a-f]?\b/gi)||[]).forEach(m=>found.add("e"+m.replace(/[^0-9a-f]/gi,"").toLowerCase().replace(/^e/,"")));
+  for(const [code,d] of Object.entries(ADD)){
+    if(SKIP_NAME.has(code)) continue;
+    const key=d[0].toLowerCase().replace(/\s*\(.*\)/,"").replace(/s$/,"");
+    if(key.length>4 && t.includes(" "+key)) found.add(code);
+  }
+  for(const [k,code] of Object.entries(ALIASES)) if(t.includes(" "+k+" ")) found.add(code);
+  return [...found];
+}
+
+/* ================= KEY INGREDIENT NOTES ================= */
+const ING = [
+ [/whole ?(grain|meal|wheat)|wholegrain/, "Whole grain – keeps its fibre, vitamins and minerals."],
+ [/\boat/, "Whole grain rich in soluble fibre (beta-glucan)."],
+ [/wheat flour|^flour|fortified.*flour/, "Main carbohydrate source; contains gluten."],
+ [/glucose|fructose|syrup|dextrose|invert sugar|maltodextrin/, "Fast-absorbing sugar or sugar syrup."],
+ [/sugar|honey/, "Added sugar – sweetness and calories with few other nutrients."],
+ [/palm/, "Fat high in saturated fat; linked to deforestation unless certified sustainable."],
+ [/olive oil/, "Healthy fat, mostly monounsaturated."],
+ [/rapeseed|canola/, "Vegetable oil low in saturated fat, with some omega-3."],
+ [/sunflower|vegetable oil|corn oil|soya oil|soybean oil/, "Vegetable oil, mostly unsaturated fat."],
+ [/butter|cream/, "Dairy fat – high in saturated fat."],
+ [/cheese/, "Dairy – protein and calcium, but often salty and fatty."],
+ [/milk|whey|lactose/, "Dairy – protein and calcium; contains lactose."],
+ [/\begg/, "Good-quality protein; a common allergen."],
+ [/salt|sodium chloride/, "Flavour and preservation – too much raises blood pressure."],
+ [/potato/, "Starchy vegetable – main carbohydrate source here."],
+ [/tomato/, "Vegetable rich in lycopene and vitamin C."],
+ [/cocoa|chocolate/, "Contains antioxidants, but chocolate usually brings sugar and fat."],
+ [/pork|ham|bacon/, "Meat – protein source; processed meats are often salty."],
+ [/chicken|turkey/, "Lean meat – good protein source."],
+ [/beef/, "Red meat – protein and iron."],
+ [/fish|salmon|tuna|cod/, "Fish – protein, and oily fish gives omega-3."],
+ [/rice/, "Grain – carbohydrate source."],
+ [/maize|corn/, "Grain – carbohydrate source."],
+ [/soy|soya/, "Plant protein; a common allergen."],
+ [/peanut|almond|hazelnut|cashew|walnut|nut/, "Nuts – healthy fats and protein; a common allergen."],
+ [/pea|lentil|bean|chickpea/, "Legume – fibre and plant protein."],
+ [/water/, "Water."],
+ [/yeast/, "Helps bread rise or adds savoury flavour."],
+ [/starch/, "Thickener and carbohydrate source."],
+ [/flavouring|flavoring|aroma/, "Flavourings – the exact recipe isn't disclosed."],
+ [/vinegar/, "Adds sharpness and helps preserve."],
+ [/juice|concentrate/, "Fruit juice – natural sugars without the fibre."],
+ [/fruit|apple|orange|strawberr|banana|raspberr|lemon/, "Fruit – vitamins and natural sugars."],
+ [/onion|garlic|carrot|vegetable|spinach|pepper/, "Vegetable – adds flavour, fibre and nutrients."],
+ [/spice|herb|paprika|cinnamon/, "Herbs and spices for flavour."],
+ [/gelatine|gelatin/, "Animal-derived gelling agent; not vegetarian."],
+ [/fibre|fiber|inulin/, "Added fibre – good for digestion."],
+];
+const ADD_CLASS = /^(emulsifiers?|preservatives?|colou?rs?|acidity regulators?|raising agents?|antioxidants?|stabilisers?|stabilizers?|thickeners?|sweeteners?|flavour enhancers?|acids?|gelling agents?|anti-?caking agents?|humectants?|glazing agents?|firming agents?|e ?\d+)/i;
+function ingNote(t){ const s=t.toLowerCase(); for(const [re,n] of ING) if(re.test(s)) return n; return null; }
+
+/* ================= DEMO PRODUCTS (fictional) ================= */
+const DEMO = [
+ {code:"demo-crisps",product_type:"food",product:{product_name:"Demo: Cheese & Onion Crisps",brands:"Demo brand",quantity:"25 g",nutriscore_grade:"d",nova_group:4,
+   additives_tags:["en:e621","en:e631","en:e627","en:e330"],allergens_tags:["en:milk"],
+   ingredients:[{text:"Potatoes",percent_estimate:62},{text:"Sunflower oil",percent_estimate:30},{text:"Cheese & onion seasoning"},{text:"Milk powder"},{text:"Onion powder"},{text:"Salt"},{text:"Flavour enhancers"},{text:"Citric acid"}],
+   nutriments:{"energy-kcal_100g":530,fat_100g:32,"saturated-fat_100g":2.8,sugars_100g:3.1,salt_100g:1.4,fiber_100g:4.1,proteins_100g:6.2}}},
+ {code:"demo-ham",product_type:"food",product:{product_name:"Demo: Smoked Ham Slices",brands:"Demo brand",quantity:"100 g",nutriscore_grade:"d",nova_group:4,
+   additives_tags:["en:e250","en:e301","en:e451"],allergens_tags:[],
+   ingredients:[{text:"Pork",percent_estimate:87},{text:"Water"},{text:"Salt"},{text:"Dextrose"},{text:"Stabiliser"},{text:"Antioxidant"},{text:"Preservative"}],
+   nutriments:{"energy-kcal_100g":110,fat_100g:3,"saturated-fat_100g":1.1,sugars_100g:1,salt_100g:2.1,fiber_100g:0,proteins_100g:20}}},
+ {code:"demo-oats",product_type:"food",product:{product_name:"Demo: Rolled Porridge Oats",brands:"Demo brand",quantity:"1 kg",nutriscore_grade:"a",nova_group:1,
+   additives_tags:[],allergens_tags:["en:gluten"],labels_tags:["en:organic"],
+   ingredients:[{text:"Wholegrain rolled oats",percent_estimate:100}],
+   nutriments:{"energy-kcal_100g":375,fat_100g:8,"saturated-fat_100g":1.5,sugars_100g:1,salt_100g:0.01,fiber_100g:9,proteins_100g:11}}},
+ {code:"demo-fizz",product_type:"food",product:{product_name:"Demo: Fizzy Orange Drink",brands:"Demo brand",quantity:"330 ml",nutriscore_grade:"e",nova_group:4,
+   additives_tags:["en:e290","en:e330","en:e211","en:e110","en:e202","en:e951","en:e950"],allergens_tags:[],
+   ingredients:[{text:"Carbonated water"},{text:"Sugar",percent_estimate:6},{text:"Orange juice from concentrate",percent_estimate:5},{text:"Acid"},{text:"Preservatives"},{text:"Sweeteners"},{text:"Colour"},{text:"Flavourings"}],
+   nutriments:{"energy-kcal_100g":28,fat_100g:0,"saturated-fat_100g":0,sugars_100g:6.6,salt_100g:0.02,fiber_100g:0,proteins_100g:0}}}
+];
+
+/* ================= SCORING ================= */
+const BAND = {
+  green:{c:"var(--green)",n:"Excellent"}, yellow:{c:"var(--yellow)",n:"Good"},
+  amber:{c:"var(--amber)",n:"Limit"}, red:{c:"var(--red)",n:"Avoid"}, grey:{c:"var(--grey)",n:"Not enough data"}
+};
+const TIER = {g:{c:"var(--green)",n:"Low risk"},y:{c:"var(--yellow)",n:"Limited"},a:{c:"var(--amber)",n:"Moderate"},r:{c:"var(--red)",n:"High risk"}};
+function bandOf(s){ if(s==null) return "grey"; return s>=7.5?"green":s>=5?"yellow":s>=2.5?"amber":"red"; }
+
+function analyse(entry){
+  const p = entry.product, type = entry.product_type||"food";
+  let tags=(p.additives_tags||[]).map(t=>t.replace(/^[a-z]{2}:/,'').toLowerCase());
+  if(!tags.length && p.ingredients_text) tags=detectAdditives(p.ingredients_text);
+  const adds = [...new Set(tags)].map(t=>{ const a=lookupAdd(t); a.d=[...a.d]; a.exp=exposure(a.code,p); if(a.exp&&a.exp.pct>=50&&a.d[1]!=="r"){ a.base=a.d[1]; a.d[1]=UP[a.d[1]]; a.bumped=true; } return a; });
+  const cnt = {g:0,y:0,a:0,r:0}; adds.forEach(a=>cnt[a.d[1]]++);
+  const ns = (p.nutriscore_grade||p.nutrition_grades||"").toLowerCase();
+  const nova = parseInt(p.nova_group)||null;
+  let score=null, parts=null, kind=type, estimated=false, drinkCap=false;
+  const nm=p.nutriments||{};
+  if(type==="food"){
+    const NS={a:6,b:4.8,c:3.3,d:1.8,e:0.6};
+    let nut=NS[ns];
+    if(nut==null && nm.fat_100g!=null && nm.sugars_100g!=null && nm.salt_100g!=null){
+      // no Nutri-Score: estimate from UK traffic-light levels
+      estimated=true; nut=6;
+      const isDrink=/\b\d+(\.\d+)?\s?(ml|cl|l)\b/i.test(p.quantity||"")||/\b(drink|soda|juice|cola|lemonade|energy|squash|smoothie|tea|coffee)\b/i.test(p.product_name||"")||/^\s*(carbonated |sparkling )?water/i.test(p.ingredients_text||"");
+      if(isDrink){
+        const sg=nm.sugars_100g;
+        nut = sg<=0.5?6 : sg<=2.5?3.3 : sg<=5?1.8 : 0.6;
+        if(sg>5) drinkCap=true;
+      } else {
+      const tl=(v,lo,hi,hiPen,midPen)=>{ if(v==null) return; if(v>hi) nut-=hiPen; else if(v>lo) nut-=midPen; };
+      tl(nm.fat_100g,3,17.5,1,0.4); tl(nm["saturated-fat_100g"],1.5,5,1.2,0.5); tl(nm.sugars_100g,5,22.5,1.5,0.7); tl(nm.salt_100g,0.3,1.5,1.2,0.5);
+      if(nm.fiber_100g>=3) nut+=0.4; if(nm.proteins_100g>=8) nut+=0.4;
+      }
+      nut=Math.round(Math.max(0.6,Math.min(6,nut))*10)/10;
+    }
+    if(nut!=null){
+      const add=Math.max(0, 3 - 0.25*cnt.y - 0.75*cnt.a - 1.5*cnt.r);
+      const proc= nova? ({1:1,2:0.8,3:0.5,4:0}[nova]) : 0.5;
+      score = nut+add+proc;
+      if(cnt.r>0 || ns==="e" || drinkCap) score=Math.min(score,4.9);
+      parts={nut,add,proc};
+    }
+  } else if(type==="unknown" || (!p.ingredients_text && !adds.length)) {
+    score=null;
+  } else {
+    score = Math.max(0, 10 - 0.5*cnt.y - 1.5*cnt.a - 3*cnt.r);
+    if(cnt.r>0) score=Math.min(score,4.9);
+  }
+  if(score!=null) score=Math.round(score*10)/10;
+  // key ingredients
+  const ings = (p.ingredients||[]).filter(i=>{
+    const t=(i.text||"").trim(); if(!t) return false;
+    if(/^en:e\d/.test(i.id||"")) return false;
+    return !ADD_CLASS.test(t);
+  }).slice(0,8).map(i=>({text:cap(i.text.replace(/_/g,'').trim()), pct:i.percent!=null?i.percent:i.percent_estimate, note:ingNote(i.text), info:ingInfo(i.text)}));
+  // nutrition (UK FSA front-of-pack thresholds per 100 g)
+  const n = p.nutriments||{};
+  const lvl=(v,lo,hi)=>v==null?null:v<=lo?"low":v>hi?"high":"medium";
+  const nut = [
+    ["Fat", n.fat_100g, "g", lvl(n.fat_100g,3,17.5)],
+    ["Saturated fat", n["saturated-fat_100g"], "g", lvl(n["saturated-fat_100g"],1.5,5)],
+    ["Sugars", n.sugars_100g, "g", lvl(n.sugars_100g,5,22.5)],
+    ["Salt", n.salt_100g, "g", lvl(n.salt_100g,0.3,1.5)],
+    ["Fibre", n.fiber_100g, "g", n.fiber_100g==null?null:n.fiber_100g>=6?"good":n.fiber_100g>=3?"ok":"lowpos"],
+    ["Protein", n.proteins_100g, "g", n.proteins_100g==null?null:n.proteins_100g>=10?"good":n.proteins_100g>=5?"ok":"lowpos"],
+  ].filter(r=>r[1]!=null);
+  const kcal = n["energy-kcal_100g"];
+  return {p,type,kind,estimated,drinkCap,adds,cnt,ns,nova,score,parts,band:bandOf(score),ings,nut,kcal,
+    allergens:(p.allergens_tags||[]).map(a=>cap(a.replace(/^[a-z]{2}:/,'').replace(/-/g,' '))),
+    organic:(p.labels_tags||[]).some(l=>/organic|bio/.test(l))};
+}
+function cap(s){ s=String(s); return s.charAt(0).toUpperCase()+s.slice(1); }
+function esc(s){ return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function listJoin(a){ return a.length<2?a.join(""):a.slice(0,-1).join(", ")+" and "+a[a.length-1]; }
+
+function overallText(r){
+  const name = r.p.product_name||"This product";
+  const out=[];
+  if(r.score==null){
+    out.push(`There isn't enough nutrition data on <strong>${esc(name)}</strong> to give a fair score yet – the product's Open Food Facts page may be missing its Nutri-Score.`);
+  } else {
+    const verdict={green:"an excellent choice",yellow:"a good choice in normal amounts",amber:"something to limit to now and then",red:"one to avoid or swap"}[r.band];
+    out.push(`<strong>${esc(name)}</strong> scores <strong>${r.score}/10</strong>, making it ${verdict}.`);
+  }
+  if(r.type==="food"){
+    const highs=r.nut.filter(x=>x[3]==="high").map(x=>x[0].toLowerCase());
+    const lows=r.nut.filter(x=>x[3]==="low").map(x=>x[0].toLowerCase());
+    if(r.ns) out.push(`Its Nutri-Score is <strong>${r.ns.toUpperCase()}</strong>${highs.length?`, mainly because it's high in ${listJoin(highs)}`:""}.`);
+    const pos=[];
+    if(lows.length) pos.push(`low in ${listJoin(lows)}`);
+    const fib=r.p.nutriments?.fiber_100g, pro=r.p.nutriments?.proteins_100g;
+    if(fib>=6) pos.push("high in fibre"); else if(fib>=3) pos.push("a source of fibre");
+    if(pro>=10) pos.push("high in protein");
+    if(pos.length) out.push(`On the plus side it's ${listJoin(pos)}.`);
+    if(r.nova) out.push({1:"It's unprocessed or minimally processed (NOVA 1).",2:"It's a processed cooking ingredient (NOVA 2).",3:"It's a processed food (NOVA 3).",4:"It's classed as <strong>ultra-processed</strong> (NOVA 4)."}[r.nova]||"");
+  } else {
+    out.push("This isn't a food, so the score is based on its listed ingredients and additives only.");
+  }
+  if(r.adds.length){
+    const bad=r.adds.filter(a=>a.d[1]==="r"||a.d[1]==="a").map(a=>`${a.d[0]} (${a.code.toUpperCase()})`);
+    out.push(`It contains ${r.adds.length} additive${r.adds.length>1?"s":""}${bad.length?`, and the ones to watch are ${listJoin(bad)}`:", none of which are a major concern"}.`);
+    if(r.cnt.r) out.push("Because it has a high-risk additive, its score is capped at 4.9.");
+  } else if(r.type==="food") out.push("It has no additives listed – a good sign.");
+  return out.filter(Boolean).join(" ");
+}
+function ingText(r){
+  if(!r.ings.length) return "The ingredient list hasn't been added to the database for this product yet.";
+  const main=r.ings[0]; const all=r.ings.map(i=>i.text.toLowerCase()).join(" | ");
+  const out=[`The main ingredient is <strong>${esc(main.text.toLowerCase())}</strong>${main.pct?` (about ${Math.round(main.pct)}%)`:""} – ingredients are listed from most to least.`];
+  const flags=[];
+  if(/sugar|syrup|dextrose|glucose|fructose/.test(all)) flags.push("added sugar");
+  if(/palm/.test(all)) flags.push("palm oil");
+  if(/flavouring|flavoring/.test(all)) flags.push("undisclosed flavourings");
+  const good=[];
+  if(/whole ?grain|wholemeal|\boat/.test(all)) good.push("whole grains");
+  if(/fruit|vegetable|tomato|apple|onion|carrot|pea|bean|lentil/.test(all)) good.push("fruit, veg or pulses");
+  if(r.ings.length<=3 && !r.adds.length) out.push("It's a short, simple recipe.");
+  else if((r.p.ingredients||[]).length>=10) out.push("It's a long ingredient list, which often signals heavier processing.");
+  if(good.length) out.push(`Good to see: ${listJoin(good)}.`);
+  if(flags.length) out.push(`Worth noticing: ${listJoin(flags)}.`);
+  return out.join(" ");
+}
+
+/* ================= RENDER RESULT ================= */
+function renderResult(entry, fromHistory, backTo){
+  const r=analyse(entry); CUR=r; CUR.entry=entry; const b=BAND[r.band];
+  const img = r.p.image_front_small_url||r.p.image_front_url||r.p.image_url;
+  const tierLabel={unknown:"Product",food:"Food",beauty:"Cosmetic",petfood:"Pet food",product:"Household product"}[r.type]||"Product";
+  const adding=window.addMode==="diet"; if(adding){ window.addMode=null; window._backToDiet=true; }
+  const back=adding?"diet":(backTo||(fromHistory?"history":"scan"));
+  const backLbl={history:"History",scan:"Scan another",swaps:"Swaps",diet:"My diet"}[back]||"Back";
+  const inDiet=dietState().items.some(x=>x.code===entry.code);
+  const el=document.getElementById("v-result");
+  el.innerHTML = `
+  <button class="back" onclick="show('${back}')">‹ ${backLbl}</button>
+  <div class="card hero-res" style="--bc:${b.c}">
+    <div class="prod">
+      <div class="pimg">${img?`<img src="${esc(img)}" alt="" onerror="this.parentNode.textContent='🛒'">`:"🛒"}</div>
+      <div><div class="pname">${esc(r.p.product_name||"Unnamed product")}</div>
+      <div class="pbrand">${esc([r.p.brands,r.p.quantity].filter(Boolean).join(" · "))}</div></div>
+    </div>
+    <div class="scorebox">
+      <div class="ring" style="--p:${r.score==null?0:r.score*10};--c:${b.c}"><div><b id="scoreNum" style="color:${b.c}">${r.score==null?"–":"0"}</b><small>out of 10</small></div></div>
+      <div><div class="bandname" style="color:${b.c}">${b.n}</div>
+        <div class="badges">
+          <span class="badge">${tierLabel}</span>
+          ${r.ns?`<span class="badge ns ns-${r.ns}">Nutri-Score ${r.ns.toUpperCase()}</span>`:""}
+          ${r.nova?`<span class="badge">NOVA ${r.nova}</span>`:""}
+          ${r.organic?`<span class="badge">🌱 Organic</span>`:""}
+          ${r.adds.some(a=>a.code.startsWith("e171"))?`<span class="badge" style="color:#FCA5A5">Banned in EU</span>`:""}
+        </div></div>
+    </div>
+    ${r.parts?`<div class="bars">
+      ${[["Nutrition",r.parts.nut,6],["Additives",r.parts.add,3],["Processing",r.parts.proc,1]].map(([l,v,m])=>`<div class="bar"><span>${l}</span><div><i style="width:${v/m*100}%"></i></div><b>${fmt(v)}/${m}</b></div>`).join("")}
+      ${(r.cnt.r||r.ns==="e"||r.drinkCap)?`<p class="note" style="margin-top:6px">Capped at 4.9 ${r.cnt.r?"because of a high-risk additive":"because of very poor nutrition"}.</p>`:""}
+      ${r.estimated?`<p class="note" style="margin-top:6px">Nutrition estimated – no Nutri-Score available.</p>`:""}
+    </div>`:""}
+    ${r.type==="food"&&r.score!=null?`<button class="btn btn-soft sm" id="dietBtn" style="margin-top:14px" onclick="addToDiet()">${inDiet?"✓ In your diet – change":"＋ Add to my diet"}</button>`:""}
+  </div>
+
+  <div class="card"><div class="label">📝 Overview</div><p class="desc">${overallText(r)}</p></div>
+
+  <div class="card"><div class="label">🧪 Additives (${r.adds.length})</div>
+    ${r.adds.length?`<p class="hint">Tap one to see what it is, how much is safe and the risks</p>`+r.adds.map((a,i)=>{const t=TIER[a.d[1]];return `
+      <div class="item tap" onclick="openAdd(${i})"><span class="dot" style="background:${t.c}"></span>
+        <div style="flex:1;min-width:0"><div class="t">${esc(a.d[0])}<em>${a.code.toUpperCase()}</em></div>
+        <div class="s">${a.bumped?`⬆ Could be ${Math.round(a.exp.pct)}% of your daily limit per ${a.exp.serving.src==="100g"?"100 g":"serving"}`:esc(a.d[2])}</div></div>
+        <span class="tier" style="background:${t.c}">${t.n}</span><span class="chev">›</span></div>`}).join(""):`<p class="note">No additives listed 🎉</p>`}
+  </div>
+
+  <div class="card"><div class="label">🥕 Key ingredients</div>
+    <p class="desc" style="margin-bottom:6px">${ingText(r)}</p>
+    ${r.ings.length?`<p class="hint">Tap an ingredient for details</p>`:""}
+    ${r.ings.map((g,i)=>{const c=g.info?ING_RATE[g.info.rating][1]:"var(--lav)";return `<div class="item tap" onclick="openIng(${i})"><span class="dot" style="background:${c}"></span><div style="flex:1;min-width:0"><div class="t">${esc(g.text)}${g.pct?`<em>~${Math.round(g.pct)}%</em>`:""}</div>${g.info?`<div class="s">${esc(g.info.what)}</div>`:""}</div><span class="chev">›</span></div>`}).join("")}
+    ${r.allergens.length?`<div style="margin-top:12px"><div class="label" style="color:#FDBA74">⚠️ Allergens</div>${r.allergens.map(a=>`<span class="allergen">${esc(a)}</span>`).join("")}</div>`:""}
+    ${r.p.ingredients_text?`<details style="margin-top:10px"><summary class="note" style="cursor:pointer">Full ingredient list</summary><p class="note" style="margin-top:6px">${esc(r.p.ingredients_text)}</p></details>`:""}
+  </div>
+
+  ${r.nut.length?`<div class="card"><div class="label">📊 Nutrition per 100 g${r.kcal!=null?` · ${Math.round(r.kcal)} kcal`:""}</div><p class="hint">Tap a nutrient for daily guidelines</p><div class="nut">
+    ${r.nut.map(([k,v,u,l])=>{const m={low:["Low","var(--green)"],medium:["Medium","var(--amber)"],high:["High","var(--red)"],good:["High","var(--green)"],ok:["Some","var(--yellow)"],lowpos:["Low","var(--grey)"]}[l]||["",""];
+      return `<div class="nrow tap" onclick="openNut('${k}')"><div>${k}</div><div style="color:var(--muted)">${(+v).toFixed(1).replace(/\.0$/,"")} ${u}</div><div class="lv" style="background:${m[1]}">${m[0]}</div></div>`}).join("")}
+  </div></div>`:""}
+  <p class="foot">Data: ${entry.code.startsWith("demo")?"fictional demo product":esc(entry.source||"Open Food Facts (ODbL)")} · Barcode ${esc(entry.code)}<br>Information only, not medical advice.</p>`;
+  show("result");
+  if(r.score!=null) countUp(document.getElementById("scoreNum"), r.score);
+  if(adding && r.type==="food") setTimeout(addToDiet,450);
+  if(!fromHistory && backTo!=="swaps") saveHistory(entry, r);
+}
+
+/* ================= SAFE DAILY LIMITS + LEGAL MAXIMUMS =================
+   [ADI in mg per kg body weight per day (null = no limit needed, 0 = no safe level set),
+    max permitted in drinks (mg per litre), max permitted in foods (mg per kg)]
+   Approximate EU/UK values (EFSA / JECFA) – used for worst-case estimates only. */
+const LIMITS={
+ e102:[7.5,100,150], e104:[0.5,10,100], e110:[4,20,50], e122:[4,50,50], e124:[0.7,10,50], e129:[7,100,300],
+ e120:[2.5,100,200], e131:[5,100,200], e132:[5,100,200], e133:[6,100,200], e151:[1,50,100], e155:[1.5,50,100],
+ e150c:[100,null,null], e150d:[300,null,null], e160b:[6,null,null], e171:[0,null,null],
+ e200:[11,300,1000], e202:[11,300,1000], e210:[5,150,1000], e211:[5,150,1000], e212:[5,150,1000],
+ e220:[0.7,20,100], e221:[0.7,20,100], e222:[0.7,20,100], e223:[0.7,20,100], e224:[0.7,20,100], e226:[0.7,20,100], e228:[0.7,20,100],
+ e235:[0.3,null,null], e249:[0.07,null,100], e250:[0.07,null,100], e251:[3.7,null,150], e252:[3.7,null,150],
+ e310:[0.5,null,200], e319:[0.7,null,200], e320:[1,null,200], e321:[0.25,null,100], e385:[1.9,null,null],
+ e338:[40,700,null], e339:[40,500,5000], e340:[40,500,5000], e341:[40,500,5000], e343:[40,500,5000],
+ e450:[40,500,5000], e451:[40,500,5000], e452:[40,500,5000],
+ e407:[75,null,null], e433:[25,null,1000], e481:[22,null,3000], e482:[22,null,3000], e554:[0.14,null,null],
+ e621:[30,null,10000], e950:[15,350,1000], e951:[40,600,1000], e952:[7,250,null], e954:[9,80,200], e955:[15,300,400],
+ e960:[4,80,330], e961:[10,20,32], e968:[500,null,null], e1520:[25,null,null]
+};
+const FUNC_DESC={
+ "Colour":"It's added to give food or drink a brighter or more consistent colour – it doesn't change taste or nutrition.",
+ "Colour / mineral":"It's used as a white colour and a calcium source.",
+ "Preservative":"It stops bacteria, yeasts or moulds growing, so the product lasts longer.",
+ "Antioxidant":"It stops fats going rancid and colours fading when exposed to air.",
+ "Emulsifier":"It helps oil and water mix smoothly and keeps texture soft.",
+ "Thickener":"It thickens or gels the product and stops it separating.",
+ "Gelling agent":"It makes the product set into a gel.",
+ "Stabiliser":"It keeps texture and moisture consistent.",
+ "Sweetener":"It gives sweetness with few or no calories.",
+ "Flavour enhancer":"It boosts savoury (umami) flavour.",
+ "Acid":"It adds sourness and helps preserve.",
+ "Acidity regulator":"It controls how sour or acidic the product is.",
+ "Raising agent":"It releases gas to make baked goods rise.",
+ "Anti-caking":"It stops powders clumping together.",
+ "Humectant":"It keeps food moist.",
+ "Glazing agent":"It gives a shiny coating.",
+ "Firming agent":"It keeps fruit and veg firm.",
+ "Bulking agent":"It adds bulk without many calories.",
+ "Gas":"It's a gas used for fizz.",
+ "Packaging gas":"It's used inside packaging to keep food fresh.",
+ "Anti-foaming":"It stops foaming during cooking or processing.",
+ "Flour treatment":"It improves how dough behaves.",
+ "Salt substitute":"It's used to reduce sodium.",
+ "Additive":"It's an approved food additive."
+};
+const TIER_MEAN={g:"No meaningful concern at the levels used in food.",y:"Safe for most people at normal intakes, but worth limiting for some groups.",a:"Some concerns – a warning label, possible over-exposure, or signals from studies.",r:"High concern – banned in the EU or flagged by regulators as a health concern."};
+const UP={g:"y",y:"a",a:"r",r:"r"};
+
+function fmt(n){ if(n==null||isNaN(n)) return "–"; return n<1?(+n.toFixed(2)).toString():n<10?(+n.toFixed(1)).toString():Math.round(n).toLocaleString(); }
+function bodyWeight(){ const w=+dietState().profile.weight; return w>=10&&w<=250?w:60; }
+function servingInfo(p){
+  let g=parseFloat(p.serving_quantity), src="serving";
+  if(!(g>0)){ const m=String(p.quantity||"").match(/([\d.]+)\s*(g|ml|cl|l|kg)\b/i);
+    if(m){ let v=parseFloat(m[1]); const u=m[2].toLowerCase(); if(u==="cl") v*=10; if(u==="l"||u==="kg") v*=1000; if(v>0&&v<=500){ g=v; src="pack"; } } }
+  if(!(g>0)){ g=100; src="100g"; }
+  return {g,src};
+}
+function isDrinkP(p){ return /\b\d+(\.\d+)?\s?(ml|cl|l)\b/i.test(p.quantity||"")||/\b(drink|soda|juice|cola|lemonade|energy|squash|smoothie)\b/i.test(p.product_name||"")||/^\s*(carbonated |sparkling )?water/i.test(p.ingredients_text||""); }
+function exposure(code,p){
+  const base=code.replace(/(\d+)[a-z]*$/,'$1'); const L=LIMITS[code]||LIMITS[base]; if(!L) return null;
+  const [adi,dmax,fmax]=L, drink=isDrinkP(p), max=drink?dmax:fmax, s=servingInfo(p), bw=bodyWeight();
+  const out={adi,limitMg:adi?adi*bw:null,bw,serving:s,drink};
+  if(adi&&max){ out.worstMg=max*s.g/1000; out.pct=out.worstMg/out.limitMg*100; }
+  return out;
+}
+function servLabel(e){ const u=e.drink?"ml":"g"; return e.serving.src==="serving"?`serving (${fmt(e.serving.g)} ${u})`:e.serving.src==="pack"?`pack (${fmt(e.serving.g)} ${u})`:`100 ${u}`; }
+
+/* ================= INGREDIENT INFO =================
+   [pattern, name, rating g/y/a/r, what it is, how much, suspected risks] */
+const FREE_SUGAR="Counts as “free sugar”: adults should have no more than 30 g a day (about 7 sugar cubes); children aged 7–10 no more than 24 g, and 4–6 year-olds 19 g.";
+const SAT_FAT="Saturated fat limit: no more than 30 g a day for men and 20 g for women.";
+const MEAT_LIMIT="The NHS advises that if you eat more than 90 g of red and processed meat a day, you cut down to 70 g.";
+const ING_INFO=[
+ [/whole ?(grain|meal|wheat)|wholegrain/,"Whole grain","g","Grains that keep their bran and germ, so they keep fibre, B vitamins and minerals.","Choose wholegrain versions of starchy foods where you can. Adults should aim for 30 g of fibre a day.","Very few – whole grains are linked with lower risk of heart disease, type 2 diabetes and bowel cancer. Wheat, barley and rye contain gluten."],
+ [/\boat/,"Oats","g","A whole grain rich in a soluble fibre called beta-glucan.","A portion is about 40 g. Around 3 g of beta-glucan a day (roughly 3 portions of oats) helps lower cholesterol.","Very few. Oats are naturally gluten-free but often contaminated with wheat unless labelled gluten-free."],
+ [/wheat flour|^flour|fortified.*flour/,"Wheat flour","y","Ground wheat with the bran and germ mostly removed. UK white flour is fortified with calcium, iron and B vitamins.","Fine as part of meals, but wholemeal adds much more fibre.","Contains gluten. Refined flour digests quickly, so it raises blood sugar faster than whole grains."],
+ [/glucose|fructose|syrup|dextrose|invert sugar|maltodextrin/,"Sugar syrup","a","Concentrated sugars such as glucose syrup, glucose-fructose syrup, dextrose or maltodextrin.",FREE_SUGAR,"Tooth decay, weight gain and higher type 2 diabetes risk when eaten often."],
+ [/sugar|honey/,"Added sugar","a","Sugar from cane or beet, or honey – sweetness and energy with few other nutrients.",FREE_SUGAR,"Tooth decay, weight gain and higher type 2 diabetes risk when eaten often."],
+ [/palm/,"Palm oil","y","Oil from the fruit of the oil palm – about half of it is saturated fat.",SAT_FAT,"Too much saturated fat raises LDL (“bad”) cholesterol. Palm farming drives deforestation unless it's RSPO-certified sustainable."],
+ [/olive oil/,"Olive oil","g","Oil pressed from olives, mostly healthy monounsaturated fat.","Use in small amounts – all oils have about 120 kcal per tablespoon.","Very few in normal amounts."],
+ [/rapeseed|canola/,"Rapeseed oil","g","Oil low in saturated fat with some plant omega-3.","Use in small amounts – all oils are high in calories.","Very few in normal amounts."],
+ [/sunflower|vegetable oil|corn oil|soya oil|soybean oil/,"Vegetable oil","g","Oil made mostly of unsaturated fats.","Use in small amounts – all oils are high in calories.","Few on its own, but deep-fried foods are high in fat and calories."],
+ [/butter|cream/,"Butter / cream","y","Dairy fat.",SAT_FAT,"High in saturated fat, which can raise cholesterol if eaten often."],
+ [/cheese/,"Cheese","y","A dairy food rich in protein and calcium.","A portion is about 30 g – roughly the size of a matchbox.","Often high in salt and saturated fat."],
+ [/milk|whey|lactose|yogh?urt/,"Milk / dairy","g","Dairy – provides protein, calcium and iodine.","Dairy or fortified alternatives are part of a balanced diet; lower-fat, lower-sugar versions are best.","Lactose intolerance for some people. Milk is a major allergen."],
+ [/\begg/,"Egg","g","Eggs – good-quality protein plus vitamin D and B12.","No set limit for most healthy people as part of a balanced diet.","A major allergen."],
+ [/salt|sodium chloride/,"Salt","a","Sodium chloride – used for flavour and to preserve food.","Adults: no more than 6 g of salt a day (about a teaspoon). Children need much less – 3 g a day at 4–6 years.","Too much raises blood pressure, which increases the risk of heart disease and stroke."],
+ [/potato/,"Potato","g","A starchy vegetable.","Counts as a starchy food rather than one of your 5 a day.","Few on its own – frying adds fat and salt."],
+ [/tomato/,"Tomato","g","A vegetable rich in vitamin C and lycopene.","80 g counts as one of your 5 a day.","Very few."],
+ [/cocoa|chocolate/,"Cocoa / chocolate","y","Cocoa solids from cacao beans; chocolate adds sugar and fat.","Best kept as a treat in small amounts.","Chocolate is usually high in sugar and saturated fat."],
+ [/ham|bacon|sausage|salami|pepperoni|chorizo|hot dog/,"Processed meat","a","Meat preserved by curing, salting or smoking.",MEAT_LIMIT,"Processed meat is classed by the WHO's cancer agency (IARC) as a cause of bowel cancer. It's often high in salt."],
+ [/pork/,"Pork","y","Red meat – protein, zinc and B vitamins.",MEAT_LIMIT,"Red meat is “probably” linked to bowel cancer (IARC) when eaten in large amounts."],
+ [/chicken|turkey/,"Poultry","g","Chicken or turkey – lean protein.","Part of the protein group; skinless and not fried is leanest.","Few – always cook thoroughly."],
+ [/beef|lamb/,"Red meat","y","Red meat – protein, iron, zinc and vitamin B12.",MEAT_LIMIT,"Red meat is “probably” linked to bowel cancer (IARC) when eaten in large amounts."],
+ [/fish|salmon|tuna|cod|mackerel|sardine/,"Fish","g","Fish – protein, and oily fish gives omega-3 fats.","Aim for 2 portions (about 140 g each) a week, one of them oily, like salmon, mackerel or sardines.","Few. Limit oily fish to 4 portions a week (2 if pregnant) because of pollutants. Fish is an allergen."],
+ [/rice/,"Rice","g","A grain – mostly carbohydrate. Brown rice is whole grain.","Starchy foods should make up just over a third of what you eat.","Few. Cooked rice left warm for long can grow harmful bacteria."],
+ [/maize|corn/,"Maize (corn)","g","A grain – mostly carbohydrate.","Part of the starchy food group.","Few."],
+ [/soy|soya/,"Soya","g","Soya beans – a source of plant protein.","Fine as part of a balanced diet.","A major allergen."],
+ [/peanut|almond|hazelnut|cashew|walnut|pistachio|nut/,"Nuts","g","Nuts – healthy fats, protein and fibre.","A small handful (about 30 g) a day is a good amount.","Major allergen. High in calories."],
+ [/pea|lentil|bean|chickpea/,"Beans & pulses","g","Beans, peas and lentils – fibre and plant protein.","80 g counts as one of your 5 a day (only once a day, however much you eat).","Very few. Can cause wind."],
+ [/water/,"Water","g","Water.","Aim for 6–8 drinks a day.","None."],
+ [/yeast/,"Yeast","g","Makes bread rise, or adds savoury flavour as yeast extract.","No set limit.","Yeast extract can be salty."],
+ [/starch/,"Starch","y","Starch extracted from corn, potato or wheat, used to thicken.","No set limit.","Few – it's a refined carbohydrate with no fibre."],
+ [/flavouring|flavoring|aroma/,"Flavourings","y","Natural or artificial flavour compounds. Companies don't have to say exactly what's in them.","Used in tiny amounts – no set limit.","Mostly low risk, but you can't see what they contain."],
+ [/vinegar/,"Vinegar","g","Fermented acid that adds sharpness and helps preserve.","No set limit.","None in normal amounts."],
+ [/juice|concentrate/,"Fruit juice","y","Fruit juice – fruit's sugars without most of its fibre.","No more than 150 ml a day. It counts as one of your 5 a day, but its sugar counts as free sugar.","Tooth decay and quick rises in blood sugar."],
+ [/fruit|apple|orange|strawberr|banana|raspberr|lemon|grape|mango/,"Fruit","g","Fruit – vitamins, fibre and natural sugars.","80 g counts as one of your 5 a day.","Very few."],
+ [/onion|garlic|carrot|vegetable|spinach|pepper|broccoli|kale/,"Vegetables","g","Vegetables – fibre, vitamins and minerals.","80 g counts as one of your 5 a day.","Very few."],
+ [/spice|herb|paprika|cinnamon|cumin|turmeric/,"Herbs & spices","g","Herbs and spices for flavour.","No set limit.","Very few."],
+ [/gelatine|gelatin/,"Gelatine","g","A protein made from animal collagen, used to set foods.","No set limit.","Not suitable for vegetarians or vegans."],
+ [/fibre|fiber|inulin/,"Added fibre","g","Fibre such as inulin, added to boost fibre content.","Adults should aim for 30 g of fibre a day.","Large amounts of inulin can cause wind or bloating."],
+];
+function ingInfo(t){ const s=String(t).toLowerCase(); for(const x of ING_INFO) if(x[0].test(s)) return {name:x[1],rating:x[2],what:x[3],much:x[4],risks:x[5]}; return null; }
+const ING_RATE={g:["Good","var(--green)"],y:["Fine in moderation","var(--yellow)"],a:["Limit","var(--amber)"],r:["Avoid often","var(--red)"]};
+
+const NUT_INFO={
+ "Fat":["All fats, including healthy unsaturated ones.","Adults: no more than about 70 g a day. On labels, more than 17.5 g per 100 g is high, and 3 g or less is low.","Fat is high in calories, so too much can lead to weight gain."],
+ "Saturated fat":["Mostly from fatty meat, butter, cheese, cakes, and palm and coconut oil.","Men: no more than 30 g a day; women: 20 g. More than 5 g per 100 g is high, and 1.5 g or less is low.","Raises LDL (“bad”) cholesterol, which increases heart disease risk."],
+ "Sugars":["All sugars, including natural ones in fruit and milk – labels don't separate out added sugar.","Free (added) sugars: no more than 30 g a day for adults. More than 22.5 g per 100 g is high, and 5 g or less is low.","Tooth decay, weight gain and type 2 diabetes."],
+ "Salt":["Sodium chloride, plus salt made from other sodium in the food.","Adults: no more than 6 g a day. More than 1.5 g per 100 g is high, and 0.3 g or less is low.","Raises blood pressure – a major cause of heart disease and stroke."],
+ "Fibre":["Plant material your gut can't fully digest – it keeps digestion healthy and you full.","Adults should aim for 30 g a day (most UK adults get about 20 g). 6 g per 100 g counts as high fibre, 3 g as a source.","Too little is linked to constipation, heart disease and bowel cancer."],
+ "Protein":["Builds and repairs muscle and body tissue.","Adults need roughly 0.75 g per kg of body weight a day – about {P} g for you.","Most people in the UK get enough; very high-protein diets are rarely needed."]
+};
+
+/* ================= DETAIL SHEET ================= */
+let CUR=null;
+function sheet(html){ const m=document.getElementById("detail"); m.querySelector(".dbody").innerHTML=html; m.classList.add("on"); m.querySelector(".sheet").scrollTop=0; }
+function closeSheet(){ document.getElementById("detail").classList.remove("on"); }
+function dsec(icon,title,body){ return `<div class="dsec"><div class="dh"><span>${icon}</span>${title}</div><div class="dp">${body}</div></div>`; }
+function openAdd(i){
+  const a=CUR.adds[i], t=TIER[a.d[1]], e=a.exp, bw=bodyWeight();
+  let how;
+  if(!e||e.adi==null) how="There's no numerical daily limit – regulators consider it safe at the levels used in food (its acceptable daily intake is “not specified”).";
+  else if(e.adi===0) how="No safe daily amount has been set. EFSA said in 2021 it could no longer be considered safe, which is why it was banned in EU food.";
+  else how=`The acceptable daily intake (ADI) is <b>${fmt(e.adi)} mg per kg</b> of body weight a day – the amount you could have every day for life without appreciable risk. For ${bw} kg that's about <b>${fmt(e.limitMg)} mg a day</b>.`;
+  let inprod;
+  if(e&&e.pct!=null) inprod=`Labels don't show exact amounts, so this is a worst-case estimate using the legal maximum. One ${servLabel(e)} could contain up to <b>${fmt(e.worstMg)} mg</b> – about <b>${e.pct<1?"<1":Math.round(e.pct)}%</b> of your daily limit.${a.bumped?` Because that could be a big share, its rating has been raised from ${TIER[a.base].n} to ${t.n}.`:e.pct<20?" That's a small share, so it doesn't change the rating.":""}${/^e2(49|5[0-2])/.test(a.code)?" (Much of the nitrite added to cured meat breaks down during curing, so real amounts are usually lower – but it also forms nitrosamines, which is the main concern.)":""}`;
+  else inprod="The amount isn't on the label, and this additive is either allowed at “whatever level is needed” or has no daily limit, so an estimate isn't possible.";
+  sheet(`<div class="dtop"><span class="bigdot" style="background:${t.c}"></span><div><div class="dname">${esc(a.d[0])}</div><div class="dsub">${a.code.toUpperCase()} · ${esc(a.d[2])}</div></div></div>
+   <div class="dpill" style="background:${t.c}">${t.n}</div>
+   ${dsec("🔬","What it is",`${esc(a.d[0])} is a ${esc(a.d[2].toLowerCase())}. ${FUNC_DESC[a.d[2]]||""}`)}
+   ${dsec("⚖️","How bad is it?",`<b>${t.n}.</b> ${TIER_MEAN[a.d[1]]}`)}
+   ${dsec("📏","How much is safe",how)}
+   ${dsec("🧪","In this product",inprod)}
+   ${dsec("⚠️","Suspected risks",esc(a.d[3]))}
+   <p class="foot">Limits are approximate EFSA/JECFA values and may change as research is updated. Information only, not medical advice.</p>`);
+}
+function openIng(i){
+  const g=CUR.ings[i], info=g.info;
+  if(!info){ sheet(`<div class="dname">${esc(g.text)}</div>${dsec("🔬","What it is",`This is ingredient number ${i+1} on the label${g.pct?`, making up about ${Math.round(g.pct)}% of the product`:""}. Ingredients are listed from most to least.`)}<p class="note">We don't have detailed info on this ingredient yet.</p>`); return; }
+  const r=ING_RATE[info.rating];
+  sheet(`<div class="dtop"><span class="bigdot" style="background:${r[1]}"></span><div><div class="dname">${esc(g.text)}</div><div class="dsub">${esc(info.name)}${g.pct?` · about ${Math.round(g.pct)}% of this product`:""}</div></div></div>
+   <div class="dpill" style="background:${r[1]}">${r[0]}</div>
+   ${dsec("🔬","What it is",esc(info.what))}
+   ${dsec("📏","How much to have",esc(info.much))}
+   ${dsec("⚠️","Suspected risks",esc(info.risks))}
+   <p class="foot">Guidelines from the NHS and UK Eatwell Guide. Information only, not medical advice.</p>`);
+}
+function openNut(k){
+  const x=NUT_INFO[k]; if(!x) return; const row=CUR.nut.find(n=>n[0]===k);
+  sheet(`<div class="dname">${k}</div><div class="dsub">${row?fmt(+row[1])+" g per 100 g in this product":""}</div>
+   ${dsec("🔬","What it is",x[0])}${dsec("📏","How much to have",x[1].replace("{P}",Math.round(bodyWeight()*0.75)))}${dsec("⚠️","Why it matters",x[2])}
+   <p class="foot">Guidelines from the NHS. Information only, not medical advice.</p>`);
+}
+function countUp(el,to){ if(!el) return; const t0=performance.now(); const step=n=>{ const k=Math.min(1,(n-t0)/900), v=to*(1-Math.pow(1-k,3)); el.textContent=k<1?v.toFixed(1):to; if(k<1) requestAnimationFrame(step); }; requestAnimationFrame(step); }
+
+/* ================= DIET (built from the products you eat) ================= */
+const DKEY="ffs_diet_v1";
+function dietState(){
+  let d=null; try{ d=JSON.parse(localStorage.getItem(DKEY)||"null"); }catch(e){}
+  d=d||window._diet||{}; d.items=d.items||[];
+  d.profile=Object.assign({age:"",sex:"",height:"",weight:d.weight||"",activity:"light"},d.profile||{});
+  return d;
+}
+function saveDiet(d){ window._diet=d; try{ localStorage.setItem(DKEY,JSON.stringify(d)); }catch(e){} }
+const FREQ={"2d":["Twice a day",14],"d":["Every day",7],"5w":["5–6 times a week",5.5],"3w":["3–4 times a week",3.5],"1w":["1–2 times a week",1.5],"m":["Less than once a week",0.5]};
+const OLDFREQ={daily:"d",often:"3w",weekly:"1w"};
+const ACT={sit:["Mostly sitting",1.2],light:["Lightly active (walking, light exercise 1–3 days a week)",1.375],mod:["Active (exercise 3–5 days a week)",1.55],high:["Very active (hard training 6–7 days a week)",1.725]};
+function perWeek(it){ const k=FREQ[it.freq]?it.freq:(OLDFREQ[it.freq]||"3w"); return FREQ[k][1]; }
+function pl(n,w){ return `${n} ${n===1?w:(/(s|sh|ch|x)$/.test(w)?w+"es":w+"s")}`; }
+
+// What this person should roughly expect each day
+function needs(pr){
+  const w=+pr.weight, h=+pr.height, a=+pr.age, male=pr.sex==="m", female=pr.sex==="f";
+  if(!(w>=25&&w<=250&&h>=100&&h<=230&&a>=11&&a<=100&&(male||female))) return null;
+  const bmr=10*w+6.25*h-5*a+(male?5:-161);
+  const kcal=Math.round(bmr*ACT[pr.activity||"light"][1]/10)*10;
+  return { kcal, bmr:Math.round(bmr),
+    fat:Math.round(kcal*0.35/9), sat:Math.round(kcal*0.11/9), sugars:Math.round(90*kcal/2000), freeSugar:Math.round(kcal*0.05/4),
+    salt:a<11?5:6, fibre:a<16?25:30, protein:Math.round(w*0.75), teen:a<18 };
+}
+// Daily totals from the products you've added
+function dietTotals(items){
+  const t={kcal:0,fat:0,sat:0,sugars:0,salt:0,fibre:0,protein:0}, contrib=[];
+  items.forEach(it=>{
+    const n=it.n||{}, f=(it.portion||100)/100*perWeek(it)/7;
+    const c={code:it.code,name:it.name,kcal:(n.kcal||0)*f,fat:(n.fat||0)*f,sat:(n.sat||0)*f,sugars:(n.sug||0)*f,salt:(n.salt||0)*f,fibre:(n.fib||0)*f,protein:(n.pro||0)*f};
+    Object.keys(t).forEach(k=>t[k]+=c[k]); contrib.push(c);
+  });
+  return {t,contrib};
+}
+function topSources(contrib,k){ return contrib.filter(c=>c[k]>0).sort((a,b)=>b[k]-a[k]).slice(0,2); }
+const NUT_TIPS={
+ sat:["Choose lower-fat dairy and leaner meat.","Swap butter for an olive or rapeseed spread.","Keep pastries, cakes and processed meat occasional."],
+ sugars:["Switch sugary drinks to no-added-sugar versions or water.","Go for plain yoghurt or cereal and add fruit.","Check labels – 5 g of sugar or less per 100 g is low."],
+ salt:["Look for lower-salt versions of bread, sauces and snacks.","Flavour with herbs, spices, lemon or garlic instead of salt.","Processed meat, cheese and crisps are big salt sources – keep them smaller."],
+ fibre:["Swap white bread, pasta and rice for wholegrain.","Add beans, lentils or chickpeas to meals.","Eat fruit and veg with their skins on, and add seeds or nuts."],
+ protein:["Add eggs, beans, lentils, fish, chicken or tofu to meals.","Greek yoghurt or milk make easy protein snacks.","A palm-sized portion of protein at each meal adds up quickly."]
+};
+function scoreDiet(d){
+  const N=needs(d.profile), items=d.items.filter(x=>x.n), out={N,good:[],imp:[],issues:[],score:null,band:"grey"};
+  if(!items.length) return out;
+  const {t,contrib}=dietTotals(items); out.t=t; out.contrib=contrib;
+  // 1) product quality, weighted by how much energy each product gives you (4 points)
+  let w=0,s=0; items.forEach((it,i)=>{ if(it.score==null) return; const wt=Math.max(contrib[i].kcal,10); w+=wt; s+=it.score*wt; });
+  const quality=w?s/w:5;
+  // 2) nutrient balance against this person's needs, scaled to the energy logged (6 points)
+  const E=N?N.kcal:2000, kc=Math.max(t.kcal,1), scale=E/kc;    // "if your whole diet looked like this"
+  const proj={sat:t.sat*scale,sugars:t.sugars*scale,salt:t.salt*scale,fibre:t.fibre*scale,protein:t.protein*scale};
+  const lim={sat:N?N.sat:20,sugars:N?N.sugars:90,salt:N?N.salt:6,fibre:N?N.fibre:30,protein:N?N.protein:50};
+  const over=k=>1.2*Math.max(0,Math.min(1,2-proj[k]/lim[k])), under=k=>1.2*Math.min(1,proj[k]/lim[k]);
+  const pts={sat:over("sat"),sugars:over("sugars"),salt:over("salt"),fibre:under("fibre"),protein:under("protein")};
+  out.score=Math.round(Math.min(10,quality*0.4+Object.values(pts).reduce((a,b)=>a+b,0))*10)/10;
+  out.band=bandOf(out.score); out.quality=Math.round(quality*10)/10; out.proj=proj; out.lim=lim;
+  const nm={sat:"saturated fat",sugars:"sugar",salt:"salt",fibre:"fibre",protein:"protein"};
+  const src=k=>{ const s=topSources(contrib,k); return s.length?` Biggest sources: ${listJoin(s.map(x=>x.name))}.`:""; };
+  ["sat","sugars","salt"].forEach(k=>{
+    const r=proj[k]/lim[k];
+    if(r<=1) out.good.push(`${cap(nm[k])} is within your limit (about ${fmt(proj[k])} g of ${lim[k]} g a day).`);
+    else { out.imp.push(`${cap(nm[k])} is too high – about ${fmt(proj[k])} g a day against a limit of ${lim[k]} g for you.${src(k)}`); out.issues.push({k,label:nm[k],codes:topSources(contrib,k).map(x=>x.code)}); }
+  });
+  ["fibre","protein"].forEach(k=>{
+    const r=proj[k]/lim[k];
+    if(r>=0.9) out.good.push(`You're getting enough ${nm[k]} (about ${fmt(proj[k])} g of ${lim[k]} g a day).`);
+    else { out.imp.push(`${cap(nm[k])} is low – about ${fmt(proj[k])} g a day, but you need around ${lim[k]} g.`); out.issues.push({k,label:nm[k],codes:[]}); }
+  });
+  const low=items.filter(x=>x.score!=null&&x.score<5);
+  if(!low.length) out.good.push("All your products score 5 or more 🛒");
+  else out.imp.push(`${pl(low.length,"product")} you eat score${low.length===1?"s":""} under 5: ${listJoin(low.map(x=>x.name))}.`);
+  out.coverage=N?t.kcal/N.kcal:null;
+  return out;
+}
+function setProfile(k,v){ const d=dietState(); d.profile[k]=v; if(k==="weight") d.weight=v; saveDiet(d); renderDiet(true); }
+function setPortion(code,v){ const d=dietState(), it=d.items.find(x=>x.code===code); const g=parseFloat(v); if(it&&g>0&&g<=5000){ it.portion=g; saveDiet(d); renderDiet(true); } }
+function setFreq(code,f){ const d=dietState(), it=d.items.find(x=>x.code===code); if(it){ it.freq=f; saveDiet(d);} renderDiet(true); }
+function removeItem(code){ const d=dietState(); d.items=d.items.filter(x=>x.code!==code); saveDiet(d); renderDiet(true); }
+function addToDiet(){
+  const e=CUR.entry, d=dietState(), it=d.items.find(x=>x.code===e.code), unit=isDrinkP(CUR.p)?"ml":"g";
+  const def=it?it.portion:servingInfo(CUR.p).g;
+  sheet(`<div class="dname">Add to my diet</div><div class="dsub">${esc(CUR.p.product_name||"")}</div>
+   <div class="dsec"><div class="dh"><span>🍽️</span>How much do you usually have?</div>
+     <div class="row"><input class="input" id="portionIn" type="number" inputmode="decimal" value="${fmt(def)}"><span style="align-self:center;color:var(--muted);font-weight:700">${unit}</span></div>
+     <p class="note" style="margin-top:6px">${CUR.p.serving_size?`Pack serving: ${esc(CUR.p.serving_size)}`:"Tip: check the pack for its serving size."}</p></div>
+   <div class="dsec"><div class="dh"><span>📅</span>How often?</div>
+     <div class="stack">${Object.entries(FREQ).map(([k,[l]])=>`<button class="btn ${it&&it.freq===k?"btn-primary":"btn-soft"} sm" onclick="saveItem('${k}')">${l}</button>`).join("")}</div></div>
+   ${it?`<button class="btn btn-soft sm" style="color:#FCA5A5;margin-top:10px" onclick="removeItem('${esc(e.code)}');closeSheet();toast('Removed from your diet')">Remove from my diet</button>`:""}`);
+}
+function saveItem(f){
+  const e=CUR.entry, p=CUR.p, n=p.nutriments||{}, d=dietState();
+  const portion=parseFloat(document.getElementById("portionIn").value)||servingInfo(p).g;
+  d.items=d.items.filter(x=>x.code!==e.code);
+  d.items.push({code:e.code,name:p.product_name||"Product",score:CUR.score,img:p.image_front_small_url||"",freq:f,portion,
+    cats:p.categories_tags||[],unit:isDrinkP(p)?"ml":"g",
+    n:{kcal:n["energy-kcal_100g"],fat:n.fat_100g,sat:n["saturated-fat_100g"],sug:n.sugars_100g,salt:n.salt_100g,fib:n.fiber_100g,pro:n.proteins_100g}});
+  saveDiet(d); closeSheet(); toast("Added to your diet ✓");
+  const b=document.getElementById("dietBtn"); if(b) b.textContent="✓ In your diet – change";
+  if(window._backToDiet){ window._backToDiet=false; show("diet"); }
+}
+function startAdd(){ window.addMode="diet"; show("scan"); }
+function cancelAdd(){ window.addMode=null; show("diet"); }
+function quickAdd(code){ const h=getHistory().find(x=>x.entry.code===code); if(!h) return; CUR=analyse(h.entry); CUR.entry=h.entry; window._backToDiet=true; addToDiet(); }
+function toast(t){ const el=document.getElementById("toast"); el.textContent=t; el.classList.add("on"); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove("on"),1800); }
+function ring(score,band){ const b=BAND[band]; return `<div class="ring" style="--p:${score==null?0:score*10};--c:${b.c}"><div><b style="color:${b.c}">${score==null?"–":score}</b><small>out of 10</small></div></div>`; }
+function meter(label,val,lim,kind){
+  const r=lim?val/lim:0, pct=Math.min(100,r*100);
+  const col= kind==="max" ? (r<=1?"var(--green)":r<=1.5?"var(--amber)":"var(--red)") : (r>=0.9?"var(--green)":r>=0.6?"var(--amber)":"var(--red)");
+  return `<div class="meter"><div class="mt"><span>${label}</span><b>${fmt(val)} / ${lim} g</b></div><div class="mb"><i style="width:${pct}%;background:${col}"></i>${kind==="max"?'<u></u>':""}</div></div>`;
+}
+function renderDiet(keepScroll){
+  const y=window.scrollY, d=dietState(), pr=d.profile, r=scoreDiet(d), N=r.N, el=document.getElementById("v-diet");
+  const inDiet=new Set(d.items.map(x=>x.code));
+  const recent=getHistory().filter(h=>h.entry.product_type==="food"&&!inDiet.has(h.entry.code)&&h.entry.product.nutriments).slice(0,6);
+  el.innerHTML=`
+  <div class="ptitle"><h2>My diet</h2><p>Add the products you eat, with how much and how often. Your score compares the combined nutrition with what someone like you needs.</p></div>
+
+  ${r.score!=null?`<div class="card hero-res" style="--bc:${BAND[r.band].c}">
+    <div class="scorebox" style="margin-top:0">${ring(r.score,r.band)}
+      <div><div class="bandname" style="color:${BAND[r.band].c}">${{green:"Great diet",yellow:"Good diet",amber:"Room to improve",red:"Needs work"}[r.band]}</div>
+      <p class="note" style="margin-top:6px">Product quality ${r.quality}/10 · ${pl(d.items.length,"product")}${r.coverage!=null&&r.coverage<0.25?`<p class="note" style="margin-top:4px;color:#FDBA74">Early estimate – add more of what you eat</p>`:""}</p></div></div>
+    <div class="label" style="margin-top:16px">A day of eating like this${N?" – for you":""}</div>
+    ${meter("Saturated fat",r.proj.sat,r.lim.sat,"max")}${meter("Sugars",r.proj.sugars,r.lim.sugars,"max")}${meter("Salt",r.proj.salt,r.lim.salt,"max")}${meter("Fibre",r.proj.fibre,r.lim.fibre,"min")}${meter("Protein",r.proj.protein,r.lim.protein,"min")}
+    <p class="note" style="margin-top:8px">${N?`Your products give about ${Math.round(r.t.kcal)} kcal a day – ${Math.round(r.coverage*100)}% of your estimated ${N.kcal} kcal. Bars show what a full day would look like if all your food were like this.${r.coverage<0.5?" Add more of what you eat for a fuller picture.":""}`:"Fill in “About you” below to make these targets personal (using standard adult limits for now)."}</p>
+  </div>
+  <div class="card"><div class="label">✅ What's working well</div>${r.good.length?r.good.map(g=>`<div class="li good">${esc(g)}</div>`).join(""):`<p class="note">Nothing yet – small swaps add up quickly.</p>`}</div>
+  <div class="card"><div class="label">🎯 What could improve</div>${r.imp.length?r.imp.map(g=>`<div class="li imp">${esc(g)}</div>`).join("")+`<button class="btn btn-primary sm" style="margin-top:12px" onclick="show('swaps')">See swaps & tips →</button>`:`<p class="note">Nothing major – nice work!</p>`}</div>`
+  :`<div class="card hero"><div style="font-size:40px">🥗</div><h2>Build your diet</h2><p>Scan or pick the foods and drinks you have regularly. We'll add them up and score your diet against what your body needs.</p></div>`}
+
+  <div class="card"><div class="label">🛒 Foods & drinks I have</div>
+    <button class="btn btn-primary sm" onclick="startAdd()">＋ Scan or upload a product</button>
+    ${d.items.map(x=>`<div class="ditem"><div class="hthumb sm">${x.img?`<img src="${esc(x.img)}" alt="" onerror="this.parentNode.textContent='🛒'">`:"🛒"}</div>
+      <div class="hinfo"><div class="n">${esc(x.name)}</div>
+        <div class="drow"><input type="number" inputmode="decimal" value="${fmt(x.portion||100)}" onchange="setPortion('${esc(x.code)}',this.value)"><span>${x.unit||"g"}</span>
+        <select onchange="setFreq('${esc(x.code)}',this.value)">${Object.entries(FREQ).map(([k,[l]])=>`<option value="${k}" ${(FREQ[x.freq]?x.freq:OLDFREQ[x.freq])===k?"selected":""}>${l}</option>`).join("")}</select></div>
+        ${x.n?"":`<div class="d" style="color:#FDBA74">Re-add this product to include its nutrition</div>`}</div>
+      <div class="hscore" style="background:${BAND[bandOf(x.score)].c}">${x.score??"–"}</div>
+      <button class="hdel" onclick="removeItem('${esc(x.code)}')" aria-label="Remove">×</button></div>`).join("")}
+    ${recent.length?`<div class="label" style="margin-top:16px">Add from recent scans</div><div class="chips">${recent.map(h=>`<button class="chip" onclick="quickAdd('${esc(h.entry.code)}')">＋ ${esc((h.entry.product.product_name||"Product").slice(0,28))}</button>`).join("")}</div>`:""}
+  </div>
+
+  <div class="card"><div class="label">👤 About you</div>
+    <p class="note" style="margin-bottom:12px">Used to estimate your daily needs and additive safe limits. Stays on your phone.</p>
+    <div class="form2">
+      <label>Age<input type="number" inputmode="numeric" value="${esc(pr.age)}" onchange="setProfile('age',this.value)"></label>
+      <label>Sex<select onchange="setProfile('sex',this.value)"><option value="">Choose</option><option value="f" ${pr.sex==="f"?"selected":""}>Female</option><option value="m" ${pr.sex==="m"?"selected":""}>Male</option></select></label>
+      <label>Height (cm)<input type="number" inputmode="decimal" value="${esc(pr.height)}" onchange="setProfile('height',this.value)"></label>
+      <label>Weight (kg)<input type="number" inputmode="decimal" value="${esc(pr.weight)}" onchange="setProfile('weight',this.value)"></label>
+    </div>
+    <label class="flab">Activity<select onchange="setProfile('activity',this.value)">${Object.entries(ACT).map(([k,[l]])=>`<option value="${k}" ${pr.activity===k?"selected":""}>${l}</option>`).join("")}</select></label>
+    ${N?`<div class="needs"><div class="label" style="margin-top:14px">What to expect each day</div>
+      <div class="ngrid"><div><b>${N.kcal}</b><span>kcal energy</span></div><div><b>${N.protein} g</b><span>protein (at least)</span></div><div><b>${N.fibre} g</b><span>fibre (aim for)</span></div>
+      <div><b>${N.sat} g</b><span>sat fat (max)</span></div><div><b>${N.freeSugar} g</b><span>added sugar (max)</span></div><div><b>${N.salt} g</b><span>salt (max)</span></div></div>
+      <p class="note" style="margin-top:8px">Energy uses the Mifflin–St Jeor equation × your activity level. Limits follow UK (SACN/NHS) guidance.${N.teen?" Teenagers' needs change with growth, so treat these as rough.":""}</p></div>`:""}
+  </div>
+  <p class="foot">A rough guide, not medical or dietary advice – everyone's needs differ. Talk to a GP or dietitian before making big changes.</p>`;
+  if(keepScroll) window.scrollTo(0,y);
+}
+
+/* ================= SWAPS ================= */
+function swapCache(code,val){ const k="ffs_sw_"+code; try{ if(val===undefined){ const v=JSON.parse(localStorage.getItem(k)||"null"); return v&&Date.now()-v.t<7*864e5?v.list:null; } localStorage.setItem(k,JSON.stringify({t:Date.now(),list:val})); }catch(e){ return null; } }
+function swapSource(code){
+  const it=dietState().items.find(x=>x.code===code); if(it) return {score:it.score||0,cats:it.cats||[],name:it.name,img:it.img,band:bandOf(it.score)};
+  const h=getHistory().find(x=>x.entry.code===code); if(h) return {score:h.score||0,cats:h.entry.product.categories_tags||[],name:h.entry.product.product_name,img:h.entry.product.image_front_small_url,band:h.band};
+  return null;
+}
+async function loadSwaps(code){
+  const s=swapSource(code), box=document.getElementById("sw-"+code); if(!s||!box) return;
+  box.innerHTML='<div class="spinner sm"></div><p class="note" style="text-align:center">Searching for better options…</p>';
+  const cached=swapCache(code); if(cached) return drawSwaps(box,cached);
+  const cats=s.cats.slice().reverse().slice(0,3);
+  if(!cats.length){ box.innerHTML='<p class="note">This product has no category in the database, so we can\'t search for swaps.</p>'; return; }
+  const found=new Map(); let reached=false;
+  outer: for(const c of cats){
+    for(const country of ["&countries_tags=en:united-kingdom",""]){
+      try{
+        const j=await getJSON(`https://world.openfoodfacts.org/api/v2/search?categories_tags=${encodeURIComponent(c)}${country}&fields=code,${FIELDS}&page_size=40&sort_by=unique_scans_n`); reached=true;
+        for(const p of (j.products||[])){
+          if(!p.code||p.code===code||found.has(p.code)||!p.product_name) continue;
+          const r=analyse({product_type:"food",product:p});
+          if(r.score!=null&&r.score>=Math.max(5,s.score+1.5)){ delete p.ingredients; found.set(p.code,{code:p.code,score:r.score,band:r.band,product:p}); }
+        }
+      }catch(e){}
+      if(found.size>=4) break outer;
+    }
+  }
+  if(!reached){ box.innerHTML=`<p class="note">Couldn't reach the database – check your connection.</p><button class="btn btn-soft sm" onclick="loadSwaps('${esc(code)}')">Try again</button>`; return; }
+  const list=[...found.values()].sort((a,b)=>b.score-a.score).slice(0,5);
+  swapCache(code,list); drawSwaps(box,list);
+}
+function drawSwaps(box,list){
+  if(!box) return; window._swaps=window._swaps||{}; list.forEach(x=>window._swaps[x.code]=x);
+  box.innerHTML = list.length? list.map(x=>`<div class="swap" onclick="openSwap('${esc(x.code)}')">
+     <div class="hthumb sm">${x.product.image_front_small_url?`<img src="${esc(x.product.image_front_small_url)}" alt="" onerror="this.parentNode.textContent='🛒'">`:"🛒"}</div>
+     <div class="hinfo"><div class="n">${esc(x.product.product_name)}</div><div class="d">${esc(x.product.brands||"")}</div></div>
+     <div class="hscore" style="background:${BAND[x.band].c}">${x.score}</div><span class="chev">›</span></div>`).join("")
+   : '<p class="note">No clearly better products found in this category yet.</p>';
+}
+function openSwap(code){ const x=(window._swaps||{})[code]; if(x) renderResult({code,product_type:"food",product:x.product,source:"Open Food Facts (ODbL)"},false,"swaps"); }
+function swapCard(code,why){
+  const s=swapSource(code); if(!s) return "";
+  return `<div class="card swcard">
+   <div class="swfrom"><div class="hthumb sm">${s.img?`<img src="${esc(s.img)}" alt="" onerror="this.parentNode.textContent='🛒'">`:"🛒"}</div>
+     <div class="hinfo"><div class="d">Instead of</div><div class="n">${esc(s.name||"Product")}</div>${why?`<div class="d" style="text-transform:none;letter-spacing:0;color:#FDBA74">${esc(why)}</div>`:""}</div>
+     <div class="hscore" style="background:${BAND[s.band].c}">${s.score??"–"}</div></div>
+   <div id="sw-${esc(code)}" class="swlist">${swapCache(code)?"":`<button class="btn btn-soft sm" onclick="loadSwaps('${esc(code)}')">Find healthier swaps</button>`}</div></div>`;
+}
+function renderSwaps(){
+  const el=document.getElementById("v-swaps"), d=dietState(), r=scoreDiet(d);
+  // diet swaps: low-scoring products + biggest sources of any nutrient that's too high
+  const why=new Map();
+  d.items.filter(x=>x.score!=null&&x.score<5).forEach(x=>why.set(x.code,`Scores ${x.score}/10`));
+  (r.issues||[]).forEach(i=>i.codes.forEach(c=>{ if(!why.has(c)) why.set(c,`A top source of ${i.label} in your diet`); else why.set(c,why.get(c)+` · high in ${i.label}`); }));
+  const dietCodes=[...why.keys()];
+  const seen=new Set(dietCodes), scans=[];
+  getHistory().forEach(h=>{ if(h.score!=null&&h.score<5&&(h.entry.product_type||"food")==="food"&&!seen.has(h.entry.code)){ seen.add(h.entry.code); scans.push(h.entry.code); } });
+  const tips=(r.issues||[]);
+  el.innerHTML=`
+  <div class="ptitle"><h2>Swaps</h2><p>Healthier alternatives for your diet and your scans, plus ways to fix what's off balance.</p></div>
+  <div class="label" style="margin:4px 4px 10px">🥗 Swaps for your diet</div>
+  ${d.items.length? (dietCodes.length? dietCodes.map(c=>swapCard(c,why.get(c))).join("") : `<div class="card"><p class="note">Your diet products all look good – no swaps needed.</p></div>`)
+    : `<div class="card"><p class="note" style="margin-bottom:12px">Add the products you eat to your diet to get swaps for them here.</p><button class="btn btn-primary sm" onclick="show('diet')">Build my diet</button></div>`}
+  ${tips.length?`<div class="label" style="margin:18px 4px 10px">💡 How to rebalance</div>`+tips.map(i=>`<div class="card"><div style="font-weight:700;margin-bottom:6px">${cap(i.label)} ${["fibre","protein"].includes(i.k)?"– add more":"– cut back"}</div>${NUT_TIPS[i.k].map(t=>`<div class="li tip">${esc(t)}</div>`).join("")}</div>`).join(""):""}
+  <div class="label" style="margin:18px 4px 10px">🔄 Swaps for your scans</div>
+  ${scans.length? scans.slice(0,10).map(c=>swapCard(c,"")).join("") : `<div class="card"><p class="note">Scanned products that score under 5 will appear here.</p></div>`}
+  <p class="foot">Swaps are products in the same Open Food Facts category that score clearly higher.</p>`;
+  [...dietCodes,...scans].forEach(c=>{ const v=swapCache(c); if(v) drawSwaps(document.getElementById("sw-"+c),v); });
+}
+
+/* ================= LOOKUP ================= */
+const FIELDS="categories_tags,serving_quantity,serving_size,product_name,brands,quantity,image_front_small_url,ingredients_text,ingredients,additives_tags,allergens_tags,labels_tags,nutriscore_grade,nutrition_grades,nova_group,nutriments";
+const SOURCES=[["food","https://world.openfoodfacts.org"],["beauty","https://world.openbeautyfacts.org"],["product","https://world.openproductsfacts.org"],["petfood","https://world.openpetfoodfacts.org"]];
+function ean13ok(c){ if(!/^\d{13}$/.test(c)) return true; let t=0; for(let i=0;i<12;i++) t+=(+c[i])*(i%2?3:1); return (10-t%10)%10===+c[12]; }
+async function getJSON(url){ const r=await fetch(url); if(!r.ok) throw new Error("http "+r.status); return r.json(); }
+
+// Source 1-4: Open Food / Beauty / Products / Pet Food Facts
+async function fromOFF(codes){
+  let reached=false;
+  for(const [type,host] of SOURCES) for(const c of codes){
+    try{ const j=await getJSON(`${host}/api/v2/product/${c}.json?fields=${FIELDS}`); reached=true;
+      if(j.status===1&&j.product&&(j.product.product_name||j.product.ingredients_text))
+        return {reached,hit:{code:c,product_type:type,product:j.product,source:`${host.replace("https://world.","").replace(/\.org$/,".org")} (ODbL)`}}; }
+    catch(e){ if(e.message.startsWith("http")) reached=true; }
+  }
+  return {reached,hit:null};
+}
+// Source 5: USDA FoodData Central (branded foods – mostly US, ingredients + nutrition)
+async function fromUSDA(codes){
+  for(const c of codes){
+    try{
+      const j=await getJSON(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=DEMO_KEY&dataType=Branded&pageSize=5&query=${c}`);
+      const f=(j.foods||[]).find(f=>f.gtinUpc&&(f.gtinUpc.replace(/^0+/,"")===c.replace(/^0+/,"")));
+      if(!f) continue;
+      const n={}; const get=re=>{const x=(f.foodNutrients||[]).find(z=>re.test(z.nutrientName)); return x?x.value:undefined;};
+      n["energy-kcal_100g"]=(f.foodNutrients||[]).find(z=>/^Energy/.test(z.nutrientName)&&/KCAL/i.test(z.unitName||""))?.value;
+      n.fat_100g=get(/^Total lipid/); n["saturated-fat_100g"]=get(/saturated/i); n.sugars_100g=get(/^(Total )?Sugars/i);
+      const na=get(/^Sodium/); if(na!=null) n.salt_100g=na*2.5/1000;
+      n.fiber_100g=get(/^Fiber/); n.proteins_100g=get(/^Protein/);
+      return {code:c,product_type:"food",source:"USDA FoodData Central",product:{product_name:titleCase(f.description||""),brands:f.brandName||f.brandOwner||"",
+        ingredients_text:f.ingredients||"",ingredients:splitIngredients(f.ingredients||""),nutriments:n}};
+    }catch(e){}
+  }
+  return null;
+}
+// Source 6: UPCitemdb (name, brand, photo only – no ingredients)
+async function fromUPCitemdb(codes){
+  for(const c of codes){
+    try{ const j=await getJSON(`https://api.upcitemdb.com/prod/trial/lookup?upc=${c}`);
+      const it=j.items&&j.items[0]; if(it&&it.title) return {code:c,product_type:"unknown",source:"UPCitemdb (name only)",
+        product:{product_name:it.title,brands:it.brand||"",image_front_small_url:(it.images||[])[0]||""}}; }catch(e){}
+  }
+  return null;
+}
+function titleCase(s){ return s.toLowerCase().replace(/\b\w/g,m=>m.toUpperCase()); }
+function splitIngredients(t){
+  const out=[]; let depth=0, cur="";
+  for(const ch of t){ if(ch==="("||ch==="[") depth++; if(ch===")"||ch==="]") depth--; if((ch===","||ch===";")&&depth<=0){out.push(cur);cur="";} else cur+=ch; }
+  out.push(cur);
+  return out.map(x=>x.replace(/\(.*?\)|\[.*?\]/g,"").replace(/^(ingredients?:?|contains:?)/i,"").replace(/[.*]/g,"").trim()).filter(Boolean).map(text=>({text:titleCase(text)}));
+}
+
+async function lookup(code){
+  code=String(code).trim();
+  const demo=DEMO.find(d=>d.code===code); if(demo) return renderResult(JSON.parse(JSON.stringify(demo)));
+  if(!/^\d{6,14}$/.test(code)) return scanMsg("That doesn't look like a barcode – it should be 8 to 13 digits.",true);
+  if(!canScan(code)) { show("scan"); return showPaywall(); }
+  const codes=[code]; if(code.length===12) codes.push("0"+code); if(code.length===13&&code[0]==="0") codes.push(code.slice(1));
+  show("loading");
+  const lt=document.getElementById("loadText");
+  lt.textContent=`Checking Open Food Facts for ${code}…`;
+  const off=await fromOFF(codes); if(off.hit){ recordUse(code); return renderResult(off.hit); }
+  lt.textContent="Checking USDA food database…";
+  const us=await fromUSDA(codes); if(us){ recordUse(code); return renderResult(us); }
+  lt.textContent="Checking general product database…";
+  const up=await fromUPCitemdb(codes); if(up){ recordUse(code); return renderResult(up); }
+  show("scan");
+  document.getElementById("manual").value=code;
+  if(!off.reached) scanMsg(IN_FRAME?"Live lookups are blocked in this preview. Open the app from a web address to scan real products – or try a demo below.":"Couldn't reach the product databases. Check your internet connection and try again.",true);
+  else scanMsg(`No product found for ${code} in any database. Check this number matches the one printed under the barcode – if not, fix it in the box below and tap Go. If it matches, the product isn't listed yet (you can add it free at openfoodfacts.org).`,true);
+}
+
+/* ================= CAMERA + PHOTO ================= */
+let reader=null;
+function hints(){
+  const h=new Map(); const F=ZXing.BarcodeFormat;
+  h.set(ZXing.DecodeHintType.POSSIBLE_FORMATS,[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.CODE_128]);
+  h.set(ZXing.DecodeHintType.TRY_HARDER,true); return h;
+}
+async function startCam(){
+  if(!isUnlocked() && usedCodes().length>=CFG.FREE_SCANS) return showPaywall();
+  hideMsg(); lastCode=null; hitCount=0;
+  if(!navigator.mediaDevices?.getUserMedia) return scanMsg("Live camera isn't available here. Use “Upload / take photo of barcode” instead.",true);
+  // Prefer native BarcodeDetector (fast on Android/Chrome), else ZXing
+  const video=document.getElementById("video");
+  document.getElementById("cam").classList.add("on");
+  try{
+    if("BarcodeDetector" in window){
+      const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+      video.srcObject=stream; await video.play();
+      const det=new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e","code_128"]});
+      let live=true; reader={reset(){live=false;stream.getTracks().forEach(t=>t.stop());video.srcObject=null;}};
+      const loop=async()=>{ if(!live) return; try{const c=await det.detect(video); if(c.length && found(c[0].rawValue)) return;}catch(e){} requestAnimationFrame(loop); };
+      loop();
+    } else {
+      if(typeof ZXing==="undefined") throw new Error("nolib");
+      // High-res stream + crop to the on-screen box, decoded with ZXing (works on iPhone)
+      const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080},advanced:[{focusMode:"continuous"}]}});
+      video.srcObject=stream; await video.play();
+      const mfr=new ZXing.MultiFormatReader(); mfr.setHints(hints());
+      const cv=document.createElement("canvas"), ctx=cv.getContext("2d",{willReadFrequently:true});
+      let live=true; reader={reset(){live=false;stream.getTracks().forEach(t=>t.stop());video.srcObject=null;}};
+      const frame=document.querySelector("#cam .frame");
+      const tick=()=>{
+        if(!live) return;
+        const vw=video.videoWidth, vh=video.videoHeight;
+        if(vw&&vh){
+          const vr=video.getBoundingClientRect(), fr=frame.getBoundingClientRect();
+          const s=Math.max(vr.width/vw, vr.height/vh);
+          const ox=(vr.width-vw*s)/2, oy=(vr.height-vh*s)/2;
+          // box in video pixels, expanded so a barcode poking out still gets read
+          let x=(fr.left-vr.left-ox)/s, y=(fr.top-vr.top-oy)/s, w=fr.width/s, h=fr.height/s;
+          x-=w*0.1; w*=1.2; y-=h*0.35; h*=1.7;
+          x=Math.max(0,x); y=Math.max(0,y); w=Math.min(vw-x,w); h=Math.min(vh-y,h);
+          const k=Math.min(1,1200/w); cv.width=Math.round(w*k); cv.height=Math.round(h*k);
+          ctx.drawImage(video,x,y,w,h,0,0,cv.width,cv.height);
+          try{
+            let src;
+            if(ZXing.HTMLCanvasElementLuminanceSource) src=new ZXing.HTMLCanvasElementLuminanceSource(cv);
+            else { const d=ctx.getImageData(0,0,cv.width,cv.height).data, lum=new Uint8ClampedArray(cv.width*cv.height);
+              for(let i=0,j=0;j<lum.length;i+=4,j++) lum[j]=(d[i]*306+d[i+1]*601+d[i+2]*117)>>10;
+              src=new ZXing.RGBLuminanceSource(lum,cv.width,cv.height); }
+            const res=mfr.decode(new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(src)));
+            if(res && found(res.getText())) return;
+          }catch(e){}
+        }
+        setTimeout(tick,120);
+      };
+      tick();
+    }
+  }catch(e){
+    stopCam();
+    scanMsg(IN_FRAME?"The camera is blocked inside this preview. Open the app from a web address, or use the photo upload.":"Couldn't open the camera – allow camera access in your browser settings, or use the photo upload.",true);
+  }
+}
+function stopCam(){ try{reader&&reader.reset();}catch(e){} reader=null; document.getElementById("cam").classList.remove("on"); }
+let lastCode=null, hitCount=0;
+function found(code){
+  // only accept a code once it's read identically 3 times in a row (stops blurry misreads)
+  if(!ean13ok(code)) return false;
+  if(code===lastCode) hitCount++; else { lastCode=code; hitCount=1; }
+  if(hitCount<3) return false;
+  lastCode=null; hitCount=0;
+  if(navigator.vibrate) try{navigator.vibrate(60)}catch(e){}
+  stopCam(); lookup(code); return true;
+}
+
+async function decodeFile(file){
+  hideMsg(); show("loading"); document.getElementById("loadText").textContent="Reading barcode from photo…";
+  try{
+    const url=URL.createObjectURL(file);
+    const img=await new Promise((ok,bad)=>{const i=new Image(); i.onload=()=>ok(i); i.onerror=bad; i.src=url;});
+    // try a few sizes – big phone photos decode better scaled down
+    const sizes=[1400,900,2000];
+    let code=null;
+    if("BarcodeDetector" in window){
+      try{const d=new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e","code_128"]}); const c=await d.detect(img); if(c.length) code=c[0].rawValue;}catch(e){}
+    }
+    if(!code && typeof ZXing!=="undefined"){
+      const rd=new ZXing.BrowserMultiFormatReader(hints());
+      for(const s of sizes){
+        const k=Math.min(1,s/Math.max(img.width,img.height));
+        const cv=document.createElement("canvas"); cv.width=Math.round(img.width*k); cv.height=Math.round(img.height*k);
+        cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+        try{ const res=await rd.decodeFromImageUrl(cv.toDataURL("image/jpeg",0.92)); code=res.getText(); break; }catch(e){}
+      }
+    }
+    URL.revokeObjectURL(url);
+    if(code) return lookup(code);
+    show("scan"); scanMsg("Couldn't find a barcode in that photo. Try again closer up, in good light, with the barcode flat and straight – or type the numbers in.",true);
+  }catch(e){ show("scan"); scanMsg("Couldn't read that image. Try another photo.",true); }
+}
+
+/* ================= HISTORY ================= */
+const HKEY="purplescan_history_v1"; let memHistory=[]; let hFilter="all";
+function getHistory(){ try{ const v=localStorage.getItem(HKEY); return v?JSON.parse(v):memHistory; }catch(e){ return memHistory; } }
+function setHistory(h){ memHistory=h; try{ localStorage.setItem(HKEY,JSON.stringify(h)); }catch(e){} }
+function saveHistory(entry,r){
+  let h=getHistory().filter(x=>x.entry.code!==entry.code);
+  h.unshift({ts:Date.now(),score:r.score,band:r.band,entry});
+  setHistory(h.slice(0,60));
+}
+function renderHistory(){
+  const h=getHistory();
+  const counts={all:h.length}; h.forEach(x=>counts[x.band]=(counts[x.band]||0)+1);
+  document.getElementById("hFilters").innerHTML=[["all","All"],["green","Excellent"],["yellow","Good"],["amber","Limit"],["red","Avoid"]]
+    .map(([k,n])=>`<button class="chip ${hFilter===k?"on":""}" onclick="hFilter='${k}';renderHistory()">${n}${counts[k]?` (${counts[k]})`:""}</button>`).join("");
+  const list=h.filter(x=>hFilter==="all"||x.band===hFilter);
+  document.getElementById("hList").innerHTML = list.length? list.map(x=>{
+    const p=x.entry.product, b=BAND[x.band], img=p.image_front_small_url;
+    const d=new Date(x.ts);
+    return `<div class="hitem" onclick="openHist('${esc(x.entry.code)}')">
+      <div class="hthumb">${img?`<img src="${esc(img)}" alt="" onerror="this.parentNode.textContent='🛒'">`:"🛒"}</div>
+      <div class="hinfo"><div class="n">${esc(p.product_name||"Unnamed product")}</div><div class="d">${esc(p.brands||"")}${p.brands?" · ":""}${d.toLocaleDateString(undefined,{day:"numeric",month:"short"})} ${d.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"})}</div></div>
+      <div class="hscore" style="background:${b.c}">${x.score==null?"–":x.score}</div>
+      <button class="hdel" aria-label="Delete" onclick="event.stopPropagation();delHist('${esc(x.entry.code)}')">×</button></div>`;
+  }).join("") + (hFilter==="all"?`<button class="btn btn-soft" style="margin-top:6px" onclick="clearHist()">Clear history</button>`:"")
+  : `<div class="empty">${h.length?"No scans in this band yet.":"No scans yet.<br>Scanned products will appear here."}</div>`;
+}
+function openHist(code){ const x=getHistory().find(x=>x.entry.code===code); if(x) renderResult(x.entry,true); }
+function delHist(code){ setHistory(getHistory().filter(x=>x.entry.code!==code)); renderHistory(); }
+let clearArmed=false;
+function clearHist(){
+  const btn=event.target;
+  if(!clearArmed){ clearArmed=true; btn.textContent="Tap again to clear everything"; setTimeout(()=>{clearArmed=false; if(btn.isConnected) btn.textContent="Clear history";},3000); return; }
+  clearArmed=false; setHistory([]); renderHistory();
+}
+
+/* ================= FREE SCANS + UNLOCK ================= */
+const CFG=Object.assign({PAY_LINK:"",PRICE:"£3.99",FREE_SCANS:3,UNLOCK_HASH:""},window.FFS_CONFIG||{});
+let memUsed=[], memUnlocked=false;
+function usedCodes(){ try{ return JSON.parse(localStorage.getItem("ffs_used")||"[]"); }catch(e){ return memUsed; } }
+function isUnlocked(){ try{ return localStorage.getItem("ffs_unlocked")==="1"||memUnlocked; }catch(e){ return memUnlocked; } }
+function setUnlocked(){ memUnlocked=true; try{ localStorage.setItem("ffs_unlocked","1"); }catch(e){} updateScanPill(); }
+function recordUse(code){ if(isUnlocked()) return; const u=usedCodes(); if(!u.includes(code)){ u.push(code); memUsed=u; try{ localStorage.setItem("ffs_used",JSON.stringify(u)); }catch(e){} } updateScanPill(); }
+function canScan(code){ return isUnlocked() || usedCodes().includes(code) || usedCodes().length<CFG.FREE_SCANS; }
+async function sha256(t){ const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
+async function codeValid(t){ try{ return !!CFG.UNLOCK_HASH && (await sha256(t.trim().toUpperCase()))===CFG.UNLOCK_HASH; }catch(e){ return false; } }
+function updateScanPill(){
+  const el=document.getElementById("scanPill"); if(!el) return;
+  if(isUnlocked()){ el.textContent="✓ Unlimited scans unlocked"; el.className="pill pill-on"; }
+  else { const left=Math.max(0,CFG.FREE_SCANS-usedCodes().length); el.textContent=left?`${left} free scan${left>1?"s":""} left`:"Free scans used up – tap to unlock"; el.className="pill"; }
+}
+function showPaywall(){
+  document.getElementById("pwPrice").textContent=CFG.PRICE;
+  document.getElementById("pwBuy").textContent=`Unlock forever – ${CFG.PRICE}`;
+  document.getElementById("pwMsg").textContent="";
+  document.getElementById("paywall").classList.add("on");
+}
+function hidePaywall(){ document.getElementById("paywall").classList.remove("on"); }
+function buy(){
+  if(!CFG.PAY_LINK){ document.getElementById("pwMsg").textContent="Payments aren't set up yet."; return; }
+  location.href=CFG.PAY_LINK;
+}
+async function redeem(e){
+  e.preventDefault();
+  const v=document.getElementById("pwCode").value, m=document.getElementById("pwMsg");
+  if(await codeValid(v)){ setUnlocked(); m.textContent=""; hidePaywall(); showThanks(null); }
+  else m.textContent="That code isn't right – check it and try again.";
+}
+function showThanks(code){
+  document.getElementById("tyCode").innerHTML = code ? `Your unlock code is <strong style="color:#fff;letter-spacing:.05em">${esc(code)}</strong>. Keep it safe. If you use the app from your home screen, open it there, tap the “free scans left” button on the Scan screen, then enter this code under “Have an unlock code?”.` : "Unlimited scans are now unlocked on this device.";
+  document.getElementById("thanks").classList.add("on");
+}
+(async()=>{ // returning from Stripe: ?u=<code>
+  try{
+    const q=new URLSearchParams(location.search), u=q.get("u");
+    if(u){ history.replaceState(null,"",location.pathname); if(await codeValid(u)){ setUnlocked(); showThanks(u); } }
+  }catch(e){}
+  updateScanPill();
+})();
+
+
+/* ================= NAV / UI ================= */
+const IN_FRAME = (()=>{ try{ return window.self!==window.top; }catch(e){ return true; } })();
+function show(v){
+  ["scan","loading","result","history","swaps","diet","about"].forEach(k=>document.getElementById("v-"+k).classList.toggle("hidden",k!==v));
+  const navKey = v==="result"||v==="loading" ? null : v;
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===navKey));
+  if(v==="history") renderHistory();
+  if(v==="swaps") renderSwaps();
+  if(v==="diet") renderDiet();
+  if(v!=="result") closeSheet();
+  if(v!=="scan"&&v!=="loading"&&v!=="result") window.addMode=null;
+  document.getElementById("addBanner").classList.toggle("hidden",!(v==="scan"&&window.addMode==="diet"));
+  window.scrollTo(0,0);
+}
+function scanMsg(t,isErr){ const m=document.getElementById("scanMsg"); m.textContent=t; m.classList.remove("hidden"); m.classList.toggle("err",!!isErr); }
+function hideMsg(){ document.getElementById("scanMsg").classList.add("hidden"); }
+
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+document.getElementById("btnCam").onclick=startCam;
+document.getElementById("camClose").onclick=stopCam;
+document.getElementById("fileIn").onchange=e=>{ const f=e.target.files[0]; if(f) decodeFile(f); e.target.value=""; };
+document.getElementById("manualForm").onsubmit=e=>{ e.preventDefault(); const v=document.getElementById("manual").value.replace(/\s/g,""); if(v) lookup(v); };
+document.getElementById("demoChips").innerHTML=DEMO.map(d=>`<button class="chip" onclick="lookup('${d.code}')">${esc(d.product.product_name.replace("Demo: ",""))}</button>`).join("");
+if(IN_FRAME) document.getElementById("previewBanner").classList.remove("hidden");
+
+/* ================= INSTALL + OFFLINE ================= */
+let deferredPrompt=null;
+const isStandalone=()=>window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); deferredPrompt=e; showInstallCard(); });
+window.addEventListener("appinstalled",()=>{ deferredPrompt=null; document.getElementById("installCard").classList.add("hidden"); toast("Installed ✓"); });
+function showInstallCard(){
+  let dismissed=false; try{ dismissed=localStorage.getItem("ffs_noinstall")==="1"; }catch(e){}
+  if(isStandalone()||IN_FRAME||dismissed) return;
+  if(deferredPrompt||isIOS()) document.getElementById("installCard").classList.remove("hidden");
+}
+function dismissInstall(){ try{ localStorage.setItem("ffs_noinstall","1"); }catch(e){} document.getElementById("installCard").classList.add("hidden"); }
+async function installApp(){
+  if(isStandalone()){ toast("You're already using the app ✓"); return; }
+  if(deferredPrompt){ deferredPrompt.prompt(); try{ await deferredPrompt.userChoice; }catch(e){} deferredPrompt=null; return; }
+  const ios=isIOS();
+  sheet(`<div class="dname">Install Free Food Scan</div><div class="dsub">${ios?"iPhone / iPad":"Your browser"}</div>
+   ${ios?`${dsec("1️⃣","Open in Safari","Installing only works from Safari on iPhone.")}${dsec("2️⃣","Tap Share","The square with an arrow pointing up, at the bottom of the screen.")}${dsec("3️⃣","Add to Home Screen","Scroll down the menu, tap <b>Add to Home Screen</b>, then <b>Add</b>.")}`
+   :`${dsec("1️⃣","Open the browser menu","Tap ⋮ (Chrome) or the menu button in your browser.")}${dsec("2️⃣","Install app","Choose <b>Install app</b> or <b>Add to Home screen</b>.")}`}`);
+}
+if("serviceWorker" in navigator && !IN_FRAME && (location.protocol==="https:"||location.hostname==="localhost")){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+setTimeout(showInstallCard,1500);
+
+</script>
+</body>
+</html>
