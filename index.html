@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1E1033">
-<title>Free Food Scan</title>
+<title>SafeScan</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Free Food Scan">
+<meta name="apple-mobile-web-app-title" content="SafeScan">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -215,13 +215,35 @@ nav button svg{width:23px;height:23px}
 .ditem{padding:12px 2px}
 .install{display:flex;align-items:center;gap:12px;padding:14px;margin-bottom:12px;background:linear-gradient(135deg,rgba(124,58,237,.35),rgba(45,27,78,.9))}
 .install b{font-size:15px}.install .go{padding:10px 14px}
+
+.rtop{display:flex;justify-content:space-between;align-items:center}
+.iconbtn{background:var(--card2);border:1px solid var(--line);color:var(--lav2);border-radius:999px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer;margin-bottom:12px;font-family:inherit}
+.facts{display:grid;gap:6px;margin-top:8px}
+.fact{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--lav2)}
+.fact i{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.seg{display:flex;gap:6px;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:16px;padding:5px;margin:0 0 14px;position:sticky;top:8px;z-index:20;backdrop-filter:blur(10px)}
+.seg button{flex:1;border:0;background:none;color:var(--muted);font-family:inherit;font-weight:700;font-size:12.5px;padding:10px 4px;border-radius:11px;cursor:pointer;white-space:nowrap}
+.seg button.on{background:var(--violet);color:#fff;box-shadow:0 6px 18px rgba(124,58,237,.4)}
+.setrow{display:flex;gap:14px;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line)}
+.setrow:first-of-type{border-top:0}
+.setrow b{font-size:15px}.setrow small{display:block;color:var(--muted);font-size:12.5px;margin-top:3px;line-height:1.45}
+.setrow select{background:var(--bg2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px;font-family:inherit;font-size:14px;max-width:150px}
+.toggle{width:54px;height:32px;border-radius:99px;border:0;background:var(--card2);position:relative;cursor:pointer;flex-shrink:0;transition:.2s}
+.toggle i{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:.2s}
+.toggle.on{background:var(--green)}.toggle.on i{left:25px}
+
+.owner{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:4px}
+.owner span{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:7px 11px;font-weight:700;font-size:14px}
+.owner span.top{background:var(--violet);border-color:var(--violet);color:#fff}
+.owner i{color:var(--muted);font-style:normal}
+.srcl{display:inline-block;margin-top:4px;font-size:12px;color:var(--lav);text-decoration:none;font-weight:600}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M4 6v12M8 6v12M12 6v12M15 6v12M19 6v12"/></svg></div>
-    <h1>Free Food <span>Scan</span></h1>
+    <h1>Safe<span>Scan</span></h1>
   </header>
 
   <div id="previewBanner" class="banner hidden">You're viewing a preview inside Claude, where the camera and live product lookups are blocked. Try the demo products below, or open the app from a web address to scan real products.</div>
@@ -243,7 +265,7 @@ nav button svg{width:23px;height:23px}
       <p>Scan any barcode for a score out of 10, every additive explained, and healthier swaps.</p>
       <div class="feat"><span>🧪 Additives rated</span><span>🔄 Swaps</span><span>🥗 Diet score</span></div>
     </div>
-    <div id="installCard" class="card install hidden"><div style="font-size:26px">📲</div><div style="flex:1"><b>Get the app</b><div class="note">Install Free Food Scan on your home screen – works offline too.</div></div><button class="go" onclick="installApp()">Install</button><button class="hdel" onclick="dismissInstall()" aria-label="Dismiss">×</button></div>
+    <div id="installCard" class="card install hidden"><div style="font-size:26px">📲</div><div style="flex:1"><b>Get the app</b><div class="note">Install SafeScan on your home screen – works offline too.</div></div><button class="go" onclick="installApp()">Install</button><button class="hdel" onclick="dismissInstall()" aria-label="Dismiss">×</button></div>
     <div id="addBanner" class="banner hidden" style="display:flex;align-items:center;gap:10px"><span style="flex:1">🥗 <b>Adding to your diet</b> – scan, upload a photo or type the barcode.</span><button class="chip" onclick="cancelAdd()">Cancel</button></div>
     <div style="text-align:center;margin:-4px 0 12px"><button id="scanPill" class="pill" onclick="if(!isUnlocked())showPaywall()"></button></div>
     <div class="stack" style="margin-bottom:14px">
@@ -288,7 +310,9 @@ nav button svg{width:23px;height:23px}
 
   <!-- ABOUT -->
   <section id="v-about" class="hidden">
-    <div class="card" id="installInfo"><div class="label">📲 Install the app</div><p class="note" style="margin-bottom:12px">Add Free Food Scan to your home screen so it opens full-screen like any other app, and works offline.</p><button class="btn btn-primary sm" onclick="installApp()">Install Free Food Scan</button></div>
+    <div class="ptitle"><h2>Settings</h2><p>Make SafeScan work your way.</p></div>
+    <div class="card" id="settingsCard"></div>
+    <div class="card" id="installInfo"><div class="label">📲 Install the app</div><p class="note" style="margin-bottom:12px">Add SafeScan to your home screen so it opens full-screen like any other app, and works offline.</p><button class="btn btn-primary sm" onclick="installApp()">Install SafeScan</button></div>
     <div class="card">
       <div class="label">How the score works</div>
       <div class="htable">
@@ -330,7 +354,7 @@ nav button svg{width:23px;height:23px}
         <p>When a product has no additive list, additives are picked out of the ingredient text by E-number and name.</p>
       </div>
     </div>
-    <p class="foot">Product data from <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a> (ODbL) and the sources above – entries can be incomplete or wrong.<br>For information only, not medical advice.</p>
+    <p class="foot">Product data from <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a> (ODbL) and the sources above – entries can be incomplete or wrong.<br>For information only, not medical advice. · <a href="privacy.html">Privacy policy</a></p>
   </section>
 </div>
 
@@ -342,9 +366,10 @@ nav button svg{width:23px;height:23px}
   <ul class="perks"><li>Unlimited barcode scans</li><li>Every additive rated</li><li>Full scan history</li></ul>
   <button class="btn btn-primary" id="pwBuy" onclick="buy()"></button>
   <form onsubmit="redeem(event)" style="margin-top:14px">
-    <div class="note" style="margin-bottom:6px">Have an unlock code?</div>
-    <div class="row"><input class="input" id="pwCode" placeholder="FFS-XXXXXXXXXX" autocomplete="off" autocapitalize="characters"><button class="go" type="submit">Use</button></div>
+    <div class="note" style="margin-bottom:6px">Have an unlock code for this device?</div>
+    <div class="row"><input class="input" id="pwCode" placeholder="Paste your SL-… code" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="go" type="submit">Use</button></div>
   </form>
+  <p class="note" style="margin-top:10px">Your device ID: <b id="pwDev" style="color:#fff;letter-spacing:.05em"></b> <button class="chip" style="padding:4px 10px;font-size:12px" onclick="navigator.clipboard&&navigator.clipboard.writeText(deviceId()).then(()=>toast('Device ID copied'))">Copy</button><br><span style="font-size:12px">Paid already but this device isn't unlocked (e.g. the home-screen app)? Reply to your payment receipt with this ID and you'll get a code for this device.</span></p>
   <p class="note" id="pwMsg" style="color:#FCA5A5;margin-top:8px"></p>
   <button class="back" style="margin:8px auto 0" onclick="hidePaywall()">Not now</button>
   <p class="foot">Secure payment by Stripe. Your history and past scans stay free to view.</p>
@@ -367,9 +392,8 @@ nav button svg{width:23px;height:23px}
 <nav>
   <button data-v="scan" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M10 8v8M13 8v8M17 8v8"/></svg>Scan</button>
   <button data-v="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>History</button>
-  <button data-v="swaps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4-4 4"/><path d="M21 7H8a4 4 0 0 0-4 4"/><path d="M7 21l-4-4 4-4"/><path d="M3 17h13a4 4 0 0 0 4-4"/></svg>Swaps</button>
-  <button data-v="diet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7c-2-3-7-2.5-7 2.5C5 15 9 20 12 20s7-5 7-10.5C19 4.5 14 4 12 7z"/><path d="M12 7c0-2 1-4 3-5"/></svg>Diet</button>
-  <button data-v="about"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>Info</button>
+  <button data-v="diet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7c-2-3-7-2.5-7 2.5C5 15 9 20 12 20s7-5 7-10.5C19 4.5 14 4 12 7z"/><path d="M12 7c0-2 1-4 3-5"/></svg>My diet</button>
+  <button data-v="about"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</button>
 </nav>
 <div id="toast"></div>
 <div id="detail" class="modal" onclick="if(event.target===this)closeSheet()"><div class="sheet dsheet"><div class="grab"></div><div class="dbody"></div><button class="btn btn-soft" style="margin-top:16px" onclick="closeSheet()">Close</button></div></div>
@@ -392,6 +416,7 @@ const ADD = {
  e122:["Carmoisine","a","Colour",SOUTH],
  e124:["Ponceau 4R","a","Colour",SOUTH],
  e129:["Allura red AC","a","Colour",SOUTH],
+ e127:["Erythrosine (Red 3)","a","Colour","The US revoked its approval for food in 2025 after it caused tumours in male rats at high doses; the EU only allows it in cocktail and candied cherries."],
  e131:["Patent blue V","y","Colour","Synthetic dye – rare allergic reactions."],
  e132:["Indigotine","y","Colour","Synthetic dye – rare allergic reactions."],
  e133:["Brilliant blue FCF","y","Colour","EFSA flags possible over-exposure in high consumers."],
@@ -755,7 +780,21 @@ function ingText(r){
   return out.join(" ");
 }
 
-/* ================= RENDER RESULT ================= */
+/* ================= RENDER RESULT (tabbed) ================= */
+function settings(){ let s=null; try{ s=JSON.parse(localStorage.getItem("ffs_settings")||"null"); }catch(e){} s=s||window._settings||{}; return Object.assign({ethics:false,country:"world"},s); }
+function saveSettings(s){ window._settings=s; try{ localStorage.setItem("ffs_settings",JSON.stringify(s)); }catch(e){} }
+const COUNTRIES={world:["🌍 Worldwide",""],"united-kingdom":["🇬🇧 United Kingdom","en:united-kingdom"],"united-states":["🇺🇸 United States","en:united-states"],ireland:["🇮🇪 Ireland","en:ireland"],canada:["🇨🇦 Canada","en:canada"],australia:["🇦🇺 Australia","en:australia"],france:["🇫🇷 France","en:france"],germany:["🇩🇪 Germany","en:germany"],spain:["🇪🇸 Spain","en:spain"],italy:["🇮🇹 Italy","en:italy"],india:["🇮🇳 India","en:india"]};
+function keyFacts(r){
+  const f=[];
+  if(r.cnt.r) f.push([`${r.cnt.r} high-risk additive${r.cnt.r>1?"s":""}`,"var(--red)"]);
+  else if(r.cnt.a) f.push([`${r.cnt.a} moderate-risk additive${r.cnt.a>1?"s":""}`,"var(--amber)"]);
+  else if(r.type==="food") f.push([r.adds.length?"No risky additives":"No additives","var(--green)"]);
+  const hi=r.nut.filter(x=>x[3]==="high").map(x=>x[0].toLowerCase());
+  if(hi.length) f.push([`High in ${listJoin(hi.slice(0,2))}`,"var(--amber)"]);
+  if(r.nova===4) f.push(["Ultra-processed","var(--amber)"]); else if(r.nova===1) f.push(["Unprocessed","var(--green)"]);
+  return f.slice(0,3);
+}
+let RTAB="health";
 function renderResult(entry, fromHistory, backTo){
   const r=analyse(entry); CUR=r; CUR.entry=entry; const b=BAND[r.band];
   const img = r.p.image_front_small_url||r.p.image_front_url||r.p.image_url;
@@ -764,61 +803,77 @@ function renderResult(entry, fromHistory, backTo){
   const back=adding?"diet":(backTo||(fromHistory?"history":"scan"));
   const backLbl={history:"History",scan:"Scan another",swaps:"Swaps",diet:"My diet"}[back]||"Back";
   const inDiet=dietState().items.some(x=>x.code===entry.code);
+  const S=settings();
+  if(RTAB==="ethics"&&!S.ethics) RTAB="health";
+  const tabs=[["health","❤️ Health"],["ingredients","🧪 Ingredients"],["swaps","🔄 Swaps"]].concat(S.ethics?[["ethics","🌍 Ethics"]]:[]);
   const el=document.getElementById("v-result");
   el.innerHTML = `
-  <button class="back" onclick="show('${back}')">‹ ${backLbl}</button>
+  <div class="rtop"><button class="back" onclick="show('${back}')">‹ ${backLbl}</button>
+    ${r.score!=null?`<button class="iconbtn" onclick="shareResult()" aria-label="Share">↗ Share</button>`:""}</div>
   <div class="card hero-res" style="--bc:${b.c}">
     <div class="prod">
       <div class="pimg">${img?`<img src="${esc(img)}" alt="" onerror="this.parentNode.textContent='🛒'">`:"🛒"}</div>
-      <div><div class="pname">${esc(r.p.product_name||"Unnamed product")}</div>
+      <div style="min-width:0"><div class="pname">${esc(r.p.product_name||"Unnamed product")}</div>
       <div class="pbrand">${esc([r.p.brands,r.p.quantity].filter(Boolean).join(" · "))}</div></div>
     </div>
     <div class="scorebox">
       <div class="ring" style="--p:${r.score==null?0:r.score*10};--c:${b.c}"><div><b id="scoreNum" style="color:${b.c}">${r.score==null?"–":"0"}</b><small>out of 10</small></div></div>
-      <div><div class="bandname" style="color:${b.c}">${b.n}</div>
-        <div class="badges">
-          <span class="badge">${tierLabel}</span>
-          ${r.ns?`<span class="badge ns ns-${r.ns}">Nutri-Score ${r.ns.toUpperCase()}</span>`:""}
-          ${r.nova?`<span class="badge">NOVA ${r.nova}</span>`:""}
-          ${r.organic?`<span class="badge">🌱 Organic</span>`:""}
-          ${r.adds.some(a=>a.code.startsWith("e171"))?`<span class="badge" style="color:#FCA5A5">Banned in EU</span>`:""}
-        </div></div>
+      <div style="min-width:0"><div class="bandname" style="color:${b.c}">${b.n}</div>
+        <div class="facts">${keyFacts(r).map(([t,c])=>`<div class="fact"><i style="background:${c}"></i>${esc(t)}</div>`).join("")}</div>
+      </div>
     </div>
-    ${r.parts?`<div class="bars">
+    ${r.type==="food"&&r.score!=null?`<button class="btn btn-soft sm" id="dietBtn" style="margin-top:14px" onclick="addToDiet()">${inDiet?"✓ In your diet – change":"＋ Add to my diet"}</button>`:""}
+  </div>
+  <div class="seg" role="tablist">${tabs.map(([k,l])=>`<button class="${RTAB===k?"on":""}" onclick="setRTab('${k}')">${l}</button>`).join("")}</div>
+  <div id="rpane"></div>
+  <p class="foot">Data: ${entry.code.startsWith("demo")?"fictional demo product":esc(entry.source||"Open Food Facts (ODbL)")} · Barcode ${esc(entry.code)}<br>Information only, not medical advice.</p>`;
+  drawPane();
+  show("result");
+  if(r.score!=null) countUp(document.getElementById("scoreNum"), r.score);
+  if(adding && r.type==="food") setTimeout(addToDiet,450);
+  if(!fromHistory && backTo!=="swaps") saveHistory(entry, r);
+}
+function setRTab(k){ RTAB=k; document.querySelectorAll(".seg button").forEach(b=>b.classList.toggle("on",b.getAttribute("onclick").includes(`'${k}'`))); drawPane(); }
+function drawPane(){
+  const r=CUR, el=document.getElementById("rpane"); if(!el) return;
+  if(RTAB==="ingredients") el.innerHTML=paneIngredients(r);
+  else if(RTAB==="swaps"){ el.innerHTML=paneSwaps(r); const box=document.getElementById("sw-"+r.entry.code); if(box&&r.score!=null&&r.score<7.5){ const c=swapCache(r.entry.code); if(c) drawSwaps(box,c); else loadSwaps(r.entry.code); } }
+  else if(RTAB==="ethics") { el.innerHTML='<div class="spinner sm"></div>'; renderEthics(r,el); }
+  else el.innerHTML=paneHealth(r);
+}
+function paneHealth(r){
+  return `<div class="card"><div class="label">📝 Overview</div><p class="desc">${overallText(r)}</p></div>
+  ${r.parts?`<div class="card"><div class="label">🧮 How the score adds up</div><div class="bars" style="margin-top:4px">
       ${[["Nutrition",r.parts.nut,6],["Additives",r.parts.add,3],["Processing",r.parts.proc,1]].map(([l,v,m])=>`<div class="bar"><span>${l}</span><div><i style="width:${v/m*100}%"></i></div><b>${fmt(v)}/${m}</b></div>`).join("")}
       ${(r.cnt.r||r.ns==="e"||r.drinkCap)?`<p class="note" style="margin-top:6px">Capped at 4.9 ${r.cnt.r?"because of a high-risk additive":"because of very poor nutrition"}.</p>`:""}
       ${r.estimated?`<p class="note" style="margin-top:6px">Nutrition estimated – no Nutri-Score available.</p>`:""}
-    </div>`:""}
-    ${r.type==="food"&&r.score!=null?`<button class="btn btn-soft sm" id="dietBtn" style="margin-top:14px" onclick="addToDiet()">${inDiet?"✓ In your diet – change":"＋ Add to my diet"}</button>`:""}
-  </div>
-
-  <div class="card"><div class="label">📝 Overview</div><p class="desc">${overallText(r)}</p></div>
-
-  <div class="card"><div class="label">🧪 Additives (${r.adds.length})</div>
-    ${r.adds.length?`<p class="hint">Tap one to see what it is, how much is safe and the risks</p>`+r.adds.map((a,i)=>{const t=TIER[a.d[1]];return `
+      <div class="badges" style="margin-top:8px">${r.ns?`<span class="badge ns ns-${r.ns}">Nutri-Score ${r.ns.toUpperCase()}</span>`:""}${r.nova?`<span class="badge">NOVA ${r.nova}</span>`:""}${r.organic?`<span class="badge">🌱 Organic</span>`:""}</div>
+    </div></div>`:""}
+  ${r.nut.length?`<div class="card"><div class="label">📊 Nutrition per 100 g${r.kcal!=null?` · ${Math.round(r.kcal)} kcal`:""}</div><p class="hint">Tap a nutrient for daily guidelines</p><div class="nut">
+    ${r.nut.map(([k,v,u,l])=>{const m={low:["Low","var(--green)"],medium:["Medium","var(--amber)"],high:["High","var(--red)"],good:["High","var(--green)"],ok:["Some","var(--yellow)"],lowpos:["Low","var(--grey)"]}[l]||["",""];
+      return `<div class="nrow tap" onclick="openNut('${k}')"><div>${k}</div><div style="color:var(--muted)">${(+v).toFixed(1).replace(/\.0$/,"")} ${u}</div><div class="lv" style="background:${m[1]}">${m[0]}</div></div>`}).join("")}
+  </div></div>`:""}`;
+}
+function paneIngredients(r){
+  return `<div class="card"><div class="label">🧪 Additives (${r.adds.length})</div>
+    ${r.adds.length?`<p class="hint">Tap one to see what it is, how much is safe and the risks</p>`+r.adds.map((a,i)=>{const t=TIER[a.d[1]];const reg=regNote(a.code);return `
       <div class="item tap" onclick="openAdd(${i})"><span class="dot" style="background:${t.c}"></span>
         <div style="flex:1;min-width:0"><div class="t">${esc(a.d[0])}<em>${a.code.toUpperCase()}</em></div>
-        <div class="s">${a.bumped?`⬆ Could be ${Math.round(a.exp.pct)}% of your daily limit per ${a.exp.serving.src==="100g"?"100 g":"serving"}`:esc(a.d[2])}</div></div>
+        <div class="s">${a.bumped?`⬆ Could be ${Math.round(a.exp.pct)}% of your daily limit per ${a.exp.serving.src==="100g"?"100 g":"serving"}`:reg?esc(reg):esc(a.d[2])}</div></div>
         <span class="tier" style="background:${t.c}">${t.n}</span><span class="chev">›</span></div>`}).join(""):`<p class="note">No additives listed 🎉</p>`}
   </div>
-
   <div class="card"><div class="label">🥕 Key ingredients</div>
     <p class="desc" style="margin-bottom:6px">${ingText(r)}</p>
     ${r.ings.length?`<p class="hint">Tap an ingredient for details</p>`:""}
     ${r.ings.map((g,i)=>{const c=g.info?ING_RATE[g.info.rating][1]:"var(--lav)";return `<div class="item tap" onclick="openIng(${i})"><span class="dot" style="background:${c}"></span><div style="flex:1;min-width:0"><div class="t">${esc(g.text)}${g.pct?`<em>~${Math.round(g.pct)}%</em>`:""}</div>${g.info?`<div class="s">${esc(g.info.what)}</div>`:""}</div><span class="chev">›</span></div>`}).join("")}
     ${r.allergens.length?`<div style="margin-top:12px"><div class="label" style="color:#FDBA74">⚠️ Allergens</div>${r.allergens.map(a=>`<span class="allergen">${esc(a)}</span>`).join("")}</div>`:""}
     ${r.p.ingredients_text?`<details style="margin-top:10px"><summary class="note" style="cursor:pointer">Full ingredient list</summary><p class="note" style="margin-top:6px">${esc(r.p.ingredients_text)}</p></details>`:""}
-  </div>
-
-  ${r.nut.length?`<div class="card"><div class="label">📊 Nutrition per 100 g${r.kcal!=null?` · ${Math.round(r.kcal)} kcal`:""}</div><p class="hint">Tap a nutrient for daily guidelines</p><div class="nut">
-    ${r.nut.map(([k,v,u,l])=>{const m={low:["Low","var(--green)"],medium:["Medium","var(--amber)"],high:["High","var(--red)"],good:["High","var(--green)"],ok:["Some","var(--yellow)"],lowpos:["Low","var(--grey)"]}[l]||["",""];
-      return `<div class="nrow tap" onclick="openNut('${k}')"><div>${k}</div><div style="color:var(--muted)">${(+v).toFixed(1).replace(/\.0$/,"")} ${u}</div><div class="lv" style="background:${m[1]}">${m[0]}</div></div>`}).join("")}
-  </div></div>`:""}
-  <p class="foot">Data: ${entry.code.startsWith("demo")?"fictional demo product":esc(entry.source||"Open Food Facts (ODbL)")} · Barcode ${esc(entry.code)}<br>Information only, not medical advice.</p>`;
-  show("result");
-  if(r.score!=null) countUp(document.getElementById("scoreNum"), r.score);
-  if(adding && r.type==="food") setTimeout(addToDiet,450);
-  if(!fromHistory && backTo!=="swaps") saveHistory(entry, r);
+  </div>`;
+}
+function paneSwaps(r){
+  if(r.score==null) return `<div class="card"><p class="note">We need a score before we can suggest swaps.</p></div>`;
+  if(r.score>=7.5) return `<div class="card"><div class="label">🔄 Swaps</div><p class="desc">This already scores ${r.score}/10 – a great choice. No swap needed 🎉</p></div>`;
+  return `<div class="card"><div class="label">🔄 Healthier swaps</div><p class="hint">Same kind of product, clearly higher score${settings().country!=="world"?` · ${COUNTRIES[settings().country][0]}`:""}</p><div id="sw-${esc(r.entry.code)}" class="swlist"></div></div>`;
 }
 
 /* ================= SAFE DAILY LIMITS + LEGAL MAXIMUMS =================
@@ -965,6 +1020,7 @@ function openAdd(i){
    ${dsec("📏","How much is safe",how)}
    ${dsec("🧪","In this product",inprod)}
    ${dsec("⚠️","Suspected risks",esc(a.d[3]))}
+   ${worldRules(a.code)}
    <p class="foot">Limits are approximate EFSA/JECFA values and may change as research is updated. Information only, not medical advice.</p>`);
 }
 function openIng(i){
@@ -1152,6 +1208,7 @@ function swapCache(code,val){ const k="ffs_sw_"+code; try{ if(val===undefined){ 
 function swapSource(code){
   const it=dietState().items.find(x=>x.code===code); if(it) return {score:it.score||0,cats:it.cats||[],name:it.name,img:it.img,band:bandOf(it.score)};
   const h=getHistory().find(x=>x.entry.code===code); if(h) return {score:h.score||0,cats:h.entry.product.categories_tags||[],name:h.entry.product.product_name,img:h.entry.product.image_front_small_url,band:h.band};
+  if(CUR&&CUR.entry&&CUR.entry.code===code) return {score:CUR.score||0,cats:CUR.p.categories_tags||[],name:CUR.p.product_name,img:CUR.p.image_front_small_url,band:CUR.band};
   return null;
 }
 async function loadSwaps(code){
@@ -1162,7 +1219,7 @@ async function loadSwaps(code){
   if(!cats.length){ box.innerHTML='<p class="note">This product has no category in the database, so we can\'t search for swaps.</p>'; return; }
   const found=new Map(); let reached=false;
   outer: for(const c of cats){
-    for(const country of ["&countries_tags=en:united-kingdom",""]){
+    for(const country of [...new Set([COUNTRIES[settings().country][1]?"&countries_tags="+COUNTRIES[settings().country][1]:"",""])]){
       try{
         const j=await getJSON(`https://world.openfoodfacts.org/api/v2/search?categories_tags=${encodeURIComponent(c)}${country}&fields=code,${FIELDS}&page_size=40&sort_by=unique_scans_n`); reached=true;
         for(const p of (j.products||[])){
@@ -1217,8 +1274,201 @@ function renderSwaps(){
   [...dietCodes,...scans].forEach(c=>{ const v=swapCache(c); if(v) drawSwaps(document.getElementById("sw-"+c),v); });
 }
 
+/* ================= REGULATORY NOTES (by country) ================= */
+function regNote(code){
+  const c=code.replace(/(\d+)[a-z]*$/,'$1'), R=REG[c]||REG[code]; if(!R) return "";
+  const k=settings().country; return R[k]||R.world||"";
+}
+function worldRules(code){
+  const c=code.replace(/(\d+)[a-z]*$/,'$1'), R=REG[c]||REG[code]; if(!R) return "";
+  const rows=Object.entries(R).filter(([k])=>k!=="world").map(([k,v])=>`<div style="margin:4px 0">${esc(v)}</div>`);
+  return dsec("🌍","Rules around the world",rows.length?rows.join("")+`<div style="margin-top:6px;color:var(--muted);font-size:13px">${esc(R.world)}</div>`:esc(R.world));
+}
+/* ================= SHARE CARD ================= */
+async function shareResult(){
+  const r=CUR; if(!r||r.score==null) return;
+  const W=1080,H=1920, cv=document.createElement("canvas"); cv.width=W; cv.height=H; const x=cv.getContext("2d");
+  const col={green:"#22C55E",yellow:"#FACC15",amber:"#F97316",red:"#EF4444",grey:"#8B80A8"}[r.band];
+  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,"#3B1F6E"); g.addColorStop(1,"#160B27"); x.fillStyle=g; x.fillRect(0,0,W,H);
+  const F=(w,s)=>`${w} ${s}px "Plus Jakarta Sans", system-ui, sans-serif`;
+  x.textAlign="center"; x.fillStyle="#C4B5FD"; x.font=F(800,44); x.fillText("I scanned this with SafeScan",W/2,190);
+  x.fillStyle="#fff"; x.font=F(800,64);
+  const wrap=(t,y,max,lh)=>{const words=String(t).split(" ");let line="",n=0;for(const w of words){const test=line?line+" "+w:w;if(x.measureText(test).width>max&&line){x.fillText(line,W/2,y+n*lh);line=w;n++;if(n>=2)break;}else line=test;}if(n<2)x.fillText(line,W/2,y+n*lh);return n+1;};
+  wrap(r.p.product_name||"Product",300,900,76);
+  const cy=760,R0=250; x.lineWidth=46; x.strokeStyle="rgba(255,255,255,.1)"; x.beginPath(); x.arc(W/2,cy,R0,0,Math.PI*2); x.stroke();
+  x.strokeStyle=col; x.lineCap="round"; x.beginPath(); x.arc(W/2,cy,R0,-Math.PI/2,-Math.PI/2+Math.PI*2*r.score/10); x.stroke();
+  x.fillStyle=col; x.font=F(800,190); x.fillText(String(r.score),W/2,cy+60); x.fillStyle="#B9ACDB"; x.font=F(700,44); x.fillText("out of 10",W/2,cy+130);
+  x.fillStyle=col; x.font=F(800,84); x.fillText(BAND[r.band].n,W/2,1130);
+  const flagged=r.adds.filter(a=>a.d[1]==="r"||a.d[1]==="a").slice(0,3);
+  x.font=F(700,44); let y=1260;
+  (flagged.length?flagged.map(a=>[`${a.d[0]} (${a.code.toUpperCase()})`,TIER[a.d[1]].c.includes("red")?"#EF4444":"#F97316"]):keyFacts(r).map(([t])=>[t,"#C4B5FD"])).forEach(([t,c])=>{
+    x.fillStyle=c; x.beginPath(); x.arc(170,y-14,16,0,Math.PI*2); x.fill(); x.fillStyle="#F5F3FF"; x.textAlign="left"; x.fillText(t,210,y); x.textAlign="center"; y+=86; });
+  x.fillStyle="#7C3AED"; x.beginPath(); x.roundRect(190,1640,700,120,60); x.fill();
+  x.fillStyle="#fff"; x.font=F(800,46); x.fillText("What's in yours? 🔍",W/2,1716);
+  x.fillStyle="#B9ACDB"; x.font=F(600,34); x.fillText(location.host+location.pathname.replace(/index\.html$/,""),W/2,1840);
+  const blob=await new Promise(res=>cv.toBlob(res,"image/png"));
+  const file=new File([blob],"safescan-result.png",{type:"image/png"});
+  try{ if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],text:`${r.p.product_name} scored ${r.score}/10 on SafeScan`}); return; } }catch(e){ if(e&&e.name==="AbortError") return; }
+  const url=URL.createObjectURL(blob);
+  sheet(`<div class="dname">Share your result</div><p class="note" style="margin:8px 0 12px">Press and hold the image to save or share it.</p><img src="${url}" alt="SafeScan result card" style="width:100%;border-radius:18px">`);
+}
+/* ================= SETTINGS ================= */
+function setSetting(k,v){ const s=settings(); s[k]=v; saveSettings(s); if(k==='country'){ try{ Object.keys(localStorage).filter(x=>x.startsWith('ffs_sw_')).forEach(x=>localStorage.removeItem(x)); }catch(e){} } renderSettings(); if(k==="ethics") toast(v?"Ethics mode on 🌍":"Ethics mode off"); }
+function renderSettings(){
+  const s=settings(), el=document.getElementById("settingsCard"); if(!el) return;
+  el.innerHTML=`<div class="label">⚙️ Settings</div>
+   <div class="setrow"><div><b>🌍 Ethics mode</b><small>Show who owns each brand, certifications, environmental grade and documented company concerns. Doesn't change the health score.</small></div>
+     <button class="toggle ${s.ethics?"on":""}" role="switch" aria-checked="${s.ethics}" onclick="setSetting('ethics',${!s.ethics})"><i></i></button></div>
+   <div class="setrow"><div><b>📍 Your country</b><small>Used for local rules on additives and to find swaps sold near you.</small></div>
+     <select onchange="setSetting('country',this.value)">${Object.entries(COUNTRIES).map(([k,[l]])=>`<option value="${k}" ${s.country===k?"selected":""}>${l}</option>`).join("")}</select></div>`;
+}
+/* ================= ETHICS MODE =================
+   Facts only, each with source + year. Benchmarks mostly score company policies and disclosures,
+   so they're shown as "ranked/scored", never as "ethical/unethical". Doesn't change the health score. */
+const REG={
+ e129:{world:"Warning label in UK & EU · US asked makers to drop it by end-2026",
+       "united-states":"US: FDA asked makers to phase it out by end-2026 (voluntary)",
+       "united-kingdom":"UK: must carry a warning about children's activity and attention"},
+ e110:{world:"Warning label in UK & EU · US asked makers to drop it by end-2026","united-states":"US: FDA asked makers to phase it out by end-2026 (voluntary)","united-kingdom":"UK: must carry a warning about children's activity and attention"},
+ e102:{world:"Warning label in UK & EU · US asked makers to drop it by end-2026","united-states":"US: FDA asked makers to phase it out by end-2026 (voluntary)","united-kingdom":"UK: must carry a warning about children's activity and attention"},
+ e104:{world:"Warning label in UK & EU","united-kingdom":"UK: must carry a warning about children's activity and attention"},
+ e122:{world:"Warning label in UK & EU","united-kingdom":"UK: must carry a warning about children's activity and attention"},
+ e124:{world:"Warning label in UK & EU","united-kingdom":"UK: must carry a warning about children's activity and attention"},
+ e133:{world:"US asked makers to drop it by end-2026","united-states":"US: FDA asked makers to phase it out by end-2026 (voluntary)"},
+ e132:{world:"US asked makers to drop it by end-2026","united-states":"US: FDA asked makers to phase it out by end-2026 (voluntary)"},
+ e127:{world:"US: approval revoked in 2025 (food deadline Jan 2027)"},
+ e171:{world:"Banned in EU food since 2022 · still allowed in the UK & US"}
+};
+const SRC={
+ plastic:["Science Advances, 2024 (brand audits in 84 countries)","https://www.eurekalert.org/news-releases/1041805"],
+ atni:["Access to Nutrition Initiative, Global Index 2024","https://accesstonutrition.org/index/global-access-to-nutrition-index/"],
+ atniNews:["Access to Nutrition Initiative, Global Index 2024","https://dairynews.today/news/danone-frieslandcampina-and-arla-foods-lead-2024-global-access-to-nutrition-index.html"],
+ bms:["Access to Nutrition Initiative, BMS Index 2024","https://accesstonutrition.org/index/bms-index-2024/"],
+ forest:["Forest 500 report, 2025 (via Mongabay)","https://news.mongabay.com/2025/04/corporate-giants-fall-short-on-forest-protection-commitments-report/"],
+ cerelac:["Public Eye & IBFAN report, 2024","https://www.business-humanrights.org/en/latest-news/nestl%C3%A9-adds-sugar-to-baby-food-sold-in-poorer-countries-ngo-report-alleges/"],
+ doe:["US Supreme Court, Nestlé USA v. Doe, 2021","https://www.pbs.org/newshour/politics/supreme-court-backs-nestle-cargill-in-child-slave-labor-suit"],
+ nkd:["Food Dive, 2025","https://www.fooddive.com/news/cheetos-doritos-nkd-no-artificial-dyes-pepsico/806541/"],
+ kellanova:["Confectionery News, Dec 2025","https://www.confectionerynews.com/Article/2025/12/15/mars-completes-kellanova-acquisition-in-deal-set-to-reshape-snacking/"]
+};
+// [type, text, sourceKey]   type: c = concern, p = positive, i = info
+const COMPANIES={
+ nestle:{name:"Nestlé",items:[
+  ["c","Baby-milk marketing: scored in the 20–33% band for following the WHO marketing code – no company fully complied. Nestlé disputes the method.","bms"],
+  ["c","An NGO report found about 6 g of added sugar per serving in Cerelac baby cereal sold in some lower-income countries, but none in the Swiss, German or UK versions. Nestlé says it has cut added sugar in infant cereals by 11% in ten years and follows local law.","cerelac"],
+  ["c","Linked to 3% of branded plastic litter found in global clean-up audits.","plastic"],
+  ["i","A US child-labour case over its cocoa supply chain was dismissed by the Supreme Court on jurisdiction grounds – not a ruling on the facts.","doe"],
+  ["p","Ranked in the top 10 of 30 food companies for nutrition.","atniNews"],
+  ["p","Cited for a comprehensive deforestation policy.","forest"]]},
+ pepsico:{name:"PepsiCo",items:[
+  ["c","Linked to 5% of branded plastic litter found in global clean-up audits – the 2nd highest.","plastic"],
+  ["p","Ranked in the top 10 of 30 food companies for nutrition.","atniNews"],
+  ["p","Launched dye-free versions of Cheetos and Doritos in the US in Dec 2025 (the original recipes are unchanged).","nkd"]]},
+ cocacola:{name:"The Coca-Cola Company",items:[
+  ["c","Linked to 11% of branded plastic litter found in global clean-up audits – the highest of any company.","plastic"]]},
+ danone:{name:"Danone",items:[
+  ["p","Ranked 1st of 30 food companies for nutrition (up from 4th).","atniNews"],
+  ["c","Baby-milk marketing: scored in the 20–33% band for following the WHO marketing code – no company fully complied.","bms"],
+  ["c","Linked to 3% of branded plastic litter found in global clean-up audits.","plastic"]]},
+ unilever:{name:"Unilever",items:[
+  ["p","Ranked in the top 10 of 30 food companies for nutrition.","atniNews"],
+  ["p","Cited for a comprehensive deforestation policy.","forest"]]},
+ mars:{name:"Mars, Inc.",items:[
+  ["p","Cited for a comprehensive deforestation policy.","forest"],
+  ["i","Bought Kellanova (Pringles, Cheez-It, Pop-Tarts) – completed Dec 2025.","kellanova"]]},
+ frieslandcampina:{name:"FrieslandCampina",items:[["p","Ranked 2nd of 30 food companies for nutrition, and scored highest (37%) on following the WHO baby-milk marketing code.","atniNews"]]},
+ arla:{name:"Arla Foods",items:[["p","Ranked 3rd of 30 food companies for nutrition.","atniNews"]]},
+ lactalis:{name:"Lactalis",items:[["c","Baby-milk marketing: scored 0% for following the WHO marketing code.","bms"]]},
+};
+// brand → parent (our list; may be out of date – Wikidata is used for brands not listed)
+const BRANDS={
+ pepsico:["cheetos","doritos","lay's","lays","walkers","wotsits","quavers","monster munch","sunbites","sensations","ruffles","tostitos","fritos","frito-lay","pepsi","mountain dew","7up","gatorade","quaker","rockstar","pop chips","sunchips"],
+ nestle:["nestlé","nestle","nescafé","nescafe","nesquik","kitkat","kit kat","smarties","aero","quality street","milkybar","yorkie","maggi","nespresso","perrier","s.pellegrino","san pellegrino","buxton","purina","felix","gerber","cerelac","nido","toll house","after eight","rowntree's","rowntree"],
+ cocacola:["coca-cola","coca cola","coke","fanta","sprite","powerade","smartwater","glacéau","glaceau","innocent","costa","honest","dasani","minute maid"],
+ unilever:["hellmann's","hellmanns","knorr","marmite","pot noodle","colman's","bovril","pukka"],
+ mondelez:["cadbury","oreo","milka","toblerone","ritz","belvita","maynards bassetts","green & black's","green and black's","trebor","halls","philadelphia","mondelez"],
+ mars:["mars","snickers","twix","m&m's","m&ms","bounty","galaxy","maltesers","skittles","starburst","milky way","extra","ben's original","uncle ben's","dolmio","whiskas","pedigree","pringles","cheez-it","pop-tarts","kellanova"],
+ danone:["danone","activia","actimel","alpro","evian","volvic","aptamil","cow & gate","oykos","silk","danio"],
+ kraftheinz:["heinz","kraft","lunchables","oscar mayer","jell-o","maxwell house"],
+ ferrero:["ferrero","nutella","kinder","ferrero rocher","tic tac","thorntons","raffaello"],
+ arla:["arla","lurpak","anchor","castello"],
+ frieslandcampina:["frieslandcampina","friso","yazoo","campina"],
+ lactalis:["lactalis","président","president","galbani","seriously","parmalat"]
+};
+const PARENT_NAMES={kraftheinz:"Kraft Heinz",mondelez:"Mondelēz International",ferrero:"Ferrero"};
+function findParent(p){
+  const hay=[p.brand_owner,p.brands].filter(Boolean).join(",").toLowerCase();
+  if(!hay) return null;
+  for(const [k,list] of Object.entries(BRANDS)) for(const b of list){ if(!b) continue;
+    const re=new RegExp("(^|[,\\s])"+b.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"($|[,\\s])"); if(re.test(hay)) return {key:k,brand:b}; }
+  return null;
+}
+async function wikidataOwner(brand){
+  const ck="ffs_owner_"+brand.toLowerCase();
+  try{ const c=JSON.parse(localStorage.getItem(ck)||"null"); if(c) return c; }catch(e){}
+  const api="https://www.wikidata.org/w/api.php?format=json&origin=*&";
+  const s=await getJSON(api+"action=wbsearchentities&language=en&type=item&limit=1&search="+encodeURIComponent(brand));
+  const hit=s.search&&s.search[0]; if(!hit) return null;
+  const chain=[]; let id=hit.id, label=hit.label;
+  for(let i=0;i<4&&id;i++){
+    const e=await getJSON(api+"action=wbgetentities&props=claims|labels&languages=en&ids="+id);
+    const ent=e.entities[id]; const lab=(ent.labels&&ent.labels.en&&ent.labels.en.value)||label; chain.push(lab);
+    const cl=ent.claims||{}; const next=["P749","P127","P176"].map(pp=>cl[pp]&&cl[pp][0]&&cl[pp][0].mainsnak.datavalue&&cl[pp][0].mainsnak.datavalue.value.id).find(Boolean);
+    if(!next||chain.length>4) break; id=next;
+  }
+  const out={chain,source:"Wikidata",url:"https://www.wikidata.org/wiki/"+hit.id};
+  try{ localStorage.setItem(ck,JSON.stringify(out)); }catch(e){}
+  return out;
+}
+const LABELS={"en:fair-trade":"Fairtrade","en:fairtrade-international":"Fairtrade","en:rainforest-alliance":"Rainforest Alliance","en:utz-certified":"UTZ (now Rainforest Alliance)","en:organic":"Organic","en:eu-organic":"EU Organic","en:soil-association-organic":"Soil Association Organic","en:usda-organic":"USDA Organic","en:sustainable-palm-oil":"Sustainable palm oil","en:roundtable-on-sustainable-palm-oil":"RSPO palm oil","en:msc":"MSC sustainable fish","en:sustainable-seafood-msc":"MSC sustainable fish","en:asc":"ASC farmed fish","en:b-corporation":"B Corp","en:certified-b-corporation":"B Corp","en:free-range":"Free range","en:rspca-assured":"RSPCA Assured","en:vegan":"Vegan","en:vegetarian":"Vegetarian","en:cocoa-life":"Cocoa Life","en:carbon-trust":"Carbon Trust"};
+function ethicsItem(type,text,src){
+  const col={c:"var(--amber)",p:"var(--green)",i:"var(--lav)"}[type], s=SRC[src];
+  return `<div class="item"><span class="dot" style="background:${col}"></span><div style="flex:1;min-width:0"><div class="s" style="color:var(--lav2);-webkit-line-clamp:unset;display:block">${esc(text)}</div>${s?`<a class="srcl" href="${s[1]}" target="_blank" rel="noopener">${esc(s[0])} ↗</a>`:""}</div></div>`;
+}
+async function renderEthics(r,el){
+  const p=r.p, demo=r.entry.code.startsWith("demo");
+  const found=demo?null:findParent(p);
+  const certs=[...new Set((p.labels_tags||[]).map(l=>LABELS[l]).filter(Boolean))];
+  const ia=p.ingredients_analysis_tags||[];
+  const palm=ia.includes("en:palm-oil")?["Contains palm oil","var(--amber)"]:ia.includes("en:may-contain-palm-oil")?["May contain palm oil","var(--yellow)"]:ia.includes("en:palm-oil-free")?["Palm-oil free","var(--green)"]:null;
+  const diet=ia.includes("en:vegan")?"Vegan":ia.includes("en:vegetarian")?"Vegetarian":ia.includes("en:non-vegan")&&ia.includes("en:non-vegetarian")?"Not vegetarian":null;
+  const gs=String(p.environmental_score_grade||p.ecoscore_grade||"").toLowerCase();
+  const gsOk=/^(a-plus|a|b|c|d|e|f)$/.test(gs), gsCol={"a-plus":"var(--green)",a:"var(--green)",b:"#84CC16",c:"var(--yellow)",d:"var(--amber)",e:"var(--red)",f:"var(--red)"}[gs];
+  const ownerBlock=(name,chain,src,url)=>`<div class="card"><div class="label">🏢 Who makes it</div>
+     <div class="owner">${chain.map((c,i)=>`<span class="${i===chain.length-1?"top":""}">${esc(c)}</span>`).join('<i>→</i>')}</div>
+     <p class="note" style="margin-top:8px">Ultimately owned by <b style="color:#fff">${esc(name)}</b>. <a class="srcl" href="${url}" target="_blank" rel="noopener">${esc(src)} ↗</a></p></div>`;
+  let ownerHTML="", company=null;
+  if(demo) ownerHTML=`<div class="card"><div class="label">🏢 Who makes it</div><p class="note">This is a made-up demo product, so there's no company data.</p></div>`;
+  else if(found){ company=COMPANIES[found.key]; const nm=(company&&company.name)||PARENT_NAMES[found.key]||found.key;
+    ownerHTML=ownerBlock(nm,[cap(found.brand),nm],"SafeScan brand list","https://github.com/akaskaok646/SafeScan"); }
+  const productHTML=`<div class="card"><div class="label">🌱 This product</div>
+    ${gsOk?`<div class="nrow"><div>Environmental grade (Green-Score)</div><div></div><div class="lv" style="background:${gsCol}">${gs==="a-plus"?"A+":gs.toUpperCase()}</div></div>`:`<div class="nrow"><div>Environmental grade</div><div></div><div class="lv" style="background:var(--grey)">Unknown</div></div>`}
+    ${palm?`<div class="nrow"><div>Palm oil</div><div></div><div class="lv" style="background:${palm[1]}">${palm[0].replace("Contains palm oil","Yes").replace("May contain palm oil","Maybe").replace("Palm-oil free","None")}</div></div>`:""}
+    ${diet?`<div class="nrow"><div>Suitable for</div><div></div><div class="lv" style="background:var(--lav)">${diet}</div></div>`:""}
+    <div style="margin-top:10px"><div class="hint" style="margin:0 0 6px">Certifications on the pack</div>${certs.length?certs.map(c=>`<span class="badge" style="margin:0 6px 6px 0;display:inline-block">✓ ${esc(c)}</span>`).join(""):`<p class="note">None listed in the database.</p>`}</div>
+    ${p.origins||p.manufacturing_places?`<p class="note" style="margin-top:6px">${p.origins?`Ingredients from: ${esc(p.origins)}. `:""}${p.manufacturing_places?`Made in: ${esc(p.manufacturing_places)}.`:""}</p>`:""}
+  </div>`;
+  const compHTML=()=>company?`<div class="card"><div class="label">📋 ${esc(company.name)}'s record</div>
+     <p class="hint">Documented findings and rankings, with sources. Rankings mostly judge a company's policies and reporting.</p>
+     ${company.items.filter(x=>x[0]==="c").map(x=>ethicsItem(...x)).join("")}${company.items.filter(x=>x[0]!=="c").map(x=>ethicsItem(...x)).join("")}</div>`
+     :(!demo?`<div class="card"><div class="label">📋 Company record</div><p class="note">No documented findings in our database for this company yet. That doesn't mean there are none – we only show sourced facts.</p></div>`:"");
+  const foot=`<p class="foot">Ethics info never changes the health score. Environmental grade, palm oil and certifications come from Open Food Facts; company facts are from the sources linked. Spot something wrong? <a href="https://github.com/akaskaok646/SafeScan/issues" target="_blank" rel="noopener">Tell us</a>.</p>`;
+  el.innerHTML=(ownerHTML||`<div class="card"><div class="label">🏢 Who makes it</div><p class="note" id="ownerLoading">Looking up the owner…</p></div>`)+compHTML()+productHTML+foot;
+  if(!demo&&!found){
+    const brand=String(p.brands||"").split(",")[0].replace(/^[a-z]{2}:/,"").trim();
+    if(!brand){ const n=document.getElementById("ownerLoading"); if(n) n.textContent="The brand isn't listed for this product."; return; }
+    try{
+      const w=await wikidataOwner(brand);
+      if(RTAB!=="ethics"||CUR!==r) return;
+      if(w&&w.chain.length){ const top=w.chain[w.chain.length-1];
+        const key=Object.keys(COMPANIES).find(k=>top.toLowerCase().includes(COMPANIES[k].name.toLowerCase().replace(/[, ].*$/,"").toLowerCase()));
+        company=key?COMPANIES[key]:null;
+        el.innerHTML=ownerBlock(top,w.chain,"Wikidata",w.url)+compHTML()+productHTML+foot;
+      } else { const n=document.getElementById("ownerLoading"); if(n) n.textContent=`We couldn't find who owns "${brand}".`; }
+    }catch(e){ const n=document.getElementById("ownerLoading"); if(n) n.textContent="Couldn't look up the owner right now – check your connection."; }
+  }
+}
 /* ================= LOOKUP ================= */
-const FIELDS="categories_tags,serving_quantity,serving_size,product_name,brands,quantity,image_front_small_url,ingredients_text,ingredients,additives_tags,allergens_tags,labels_tags,nutriscore_grade,nutrition_grades,nova_group,nutriments";
+const FIELDS="brand_owner,labels_tags,ecoscore_grade,environmental_score_grade,ingredients_analysis_tags,origins,manufacturing_places,categories_tags,serving_quantity,serving_size,product_name,brands,quantity,image_front_small_url,ingredients_text,ingredients,additives_tags,allergens_tags,labels_tags,nutriscore_grade,nutrition_grades,nova_group,nutriments";
 const SOURCES=[["food","https://world.openfoodfacts.org"],["beauty","https://world.openbeautyfacts.org"],["product","https://world.openproductsfacts.org"],["petfood","https://world.openpetfoodfacts.org"]];
 function ean13ok(c){ if(!/^\d{13}$/.test(c)) return true; let t=0; for(let i=0;i<12;i++) t+=(+c[i])*(i%2?3:1); return (10-t%10)%10===+c[12]; }
 async function getJSON(url){ const r=await fetch(url); if(!r.ok) throw new Error("http "+r.status); return r.json(); }
@@ -1429,8 +1679,25 @@ function clearHist(){
 const CFG=Object.assign({PAY_LINK:"",PRICE:"£3.99",FREE_SCANS:3,UNLOCK_HASH:""},window.FFS_CONFIG||{});
 let memUsed=[], memUnlocked=false;
 function usedCodes(){ try{ return JSON.parse(localStorage.getItem("ffs_used")||"[]"); }catch(e){ return memUsed; } }
-function isUnlocked(){ try{ return localStorage.getItem("ffs_unlocked")==="1"||memUnlocked; }catch(e){ return memUnlocked; } }
-function setUnlocked(){ memUnlocked=true; try{ localStorage.setItem("ffs_unlocked","1"); }catch(e){} updateScanPill(); }
+// Unlocks are tied to this device's ID. (v2: earlier test unlocks were reset.)
+let memDev=null;
+function deviceId(){
+  let d=null; try{ d=localStorage.getItem("ffs_dev"); }catch(e){}
+  if(!d){ const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789", r=crypto.getRandomValues(new Uint8Array(8)); d=[...r].map(x=>A[x%32]).join("").replace(/^(.{4})/,"$1-"); try{ localStorage.setItem("ffs_dev",d); }catch(e){ d=memDev||(memDev=d); } }
+  return d;
+}
+function isUnlocked(){ try{ return localStorage.getItem("ffs_unlocked_v2")===deviceId()||memUnlocked; }catch(e){ return memUnlocked; } }
+function setUnlocked(){ memUnlocked=true; try{ localStorage.setItem("ffs_unlocked_v2",deviceId()); }catch(e){} updateScanPill(); }
+// Device codes are signed with a private key that is NOT in this app; the app can only check them.
+const LIC_KEY={"kty":"EC","x":"oAiMp6Jvvd_aPX_ZciFZIervVQLgfKVIH3S9mSPfy9g","y":"jwXAgjmq_7qmTvo4i6BHNcwDvsRGOFbBL4fOJtlAfSk","crv":"P-256"};
+async function licenseValid(code){
+  try{
+    const c=String(code).trim().replace(/\s+/g,""); if(!/^SL-[A-Za-z0-9_-]{80,90}$/.test(c)) return false;
+    const b64=c.slice(3).replace(/-/g,"+").replace(/_/g,"/"); const sig=Uint8Array.from(atob(b64+"=".repeat((4-b64.length%4)%4)),ch=>ch.charCodeAt(0));
+    const key=await crypto.subtle.importKey("jwk",LIC_KEY,{name:"ECDSA",namedCurve:"P-256"},false,["verify"]);
+    return await crypto.subtle.verify({name:"ECDSA",hash:"SHA-256"},key,sig,new TextEncoder().encode("SafeScan:"+deviceId()));
+  }catch(e){ return false; }
+}
 function recordUse(code){ if(isUnlocked()) return; const u=usedCodes(); if(!u.includes(code)){ u.push(code); memUsed=u; try{ localStorage.setItem("ffs_used",JSON.stringify(u)); }catch(e){} } updateScanPill(); }
 function canScan(code){ return isUnlocked() || usedCodes().includes(code) || usedCodes().length<CFG.FREE_SCANS; }
 async function sha256(t){ const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
@@ -1444,6 +1711,7 @@ function showPaywall(){
   document.getElementById("pwPrice").textContent=CFG.PRICE;
   document.getElementById("pwBuy").textContent=`Unlock forever – ${CFG.PRICE}`;
   document.getElementById("pwMsg").textContent="";
+  document.getElementById("pwDev").textContent=deviceId();
   document.getElementById("paywall").classList.add("on");
 }
 function hidePaywall(){ document.getElementById("paywall").classList.remove("on"); }
@@ -1454,13 +1722,14 @@ function buy(){
 async function redeem(e){
   e.preventDefault();
   const v=document.getElementById("pwCode").value, m=document.getElementById("pwMsg");
-  if(await codeValid(v)){ setUnlocked(); m.textContent=""; hidePaywall(); showThanks(null); }
-  else m.textContent="That code isn't right – check it and try again.";
+  if(await licenseValid(v)){ setUnlocked(); m.textContent=""; hidePaywall(); showThanks(null); }
+  else m.textContent="That code doesn't match this device. Codes only work on the device whose ID they were made for.";
 }
 function showThanks(code){
-  document.getElementById("tyCode").innerHTML = code ? `Your unlock code is <strong style="color:#fff;letter-spacing:.05em">${esc(code)}</strong>. Keep it safe. If you use the app from your home screen, open it there, tap the “free scans left” button on the Scan screen, then enter this code under “Have an unlock code?”.` : "Unlimited scans are now unlocked on this device.";
+  document.getElementById("tyCode").innerHTML = "Unlimited scans are now unlocked on this device. Using the app from your home screen and it isn't unlocked there? Open the unlock screen there, copy its device ID, and reply to your payment receipt with it – you'll get a code for that device.";
   document.getElementById("thanks").classList.add("on");
 }
+
 (async()=>{ // returning from Stripe: ?u=<code>
   try{
     const q=new URLSearchParams(location.search), u=q.get("u");
@@ -1479,6 +1748,7 @@ function show(v){
   if(v==="history") renderHistory();
   if(v==="swaps") renderSwaps();
   if(v==="diet") renderDiet();
+  if(v==="about") renderSettings();
   if(v!=="result") closeSheet();
   if(v!=="scan"&&v!=="loading"&&v!=="result") window.addMode=null;
   document.getElementById("addBanner").classList.toggle("hidden",!(v==="scan"&&window.addMode==="diet"));
@@ -1511,7 +1781,7 @@ async function installApp(){
   if(isStandalone()){ toast("You're already using the app ✓"); return; }
   if(deferredPrompt){ deferredPrompt.prompt(); try{ await deferredPrompt.userChoice; }catch(e){} deferredPrompt=null; return; }
   const ios=isIOS();
-  sheet(`<div class="dname">Install Free Food Scan</div><div class="dsub">${ios?"iPhone / iPad":"Your browser"}</div>
+  sheet(`<div class="dname">Install SafeScan</div><div class="dsub">${ios?"iPhone / iPad":"Your browser"}</div>
    ${ios?`${dsec("1️⃣","Open in Safari","Installing only works from Safari on iPhone.")}${dsec("2️⃣","Tap Share","The square with an arrow pointing up, at the bottom of the screen.")}${dsec("3️⃣","Add to Home Screen","Scroll down the menu, tap <b>Add to Home Screen</b>, then <b>Add</b>.")}`
    :`${dsec("1️⃣","Open the browser menu","Tap ⋮ (Chrome) or the menu button in your browser.")}${dsec("2️⃣","Install app","Choose <b>Install app</b> or <b>Add to Home screen</b>.")}`}`);
 }

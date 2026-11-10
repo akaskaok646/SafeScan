@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Free Food Scan",
-  "short_name": "Food Scan",
+  "name": "SafeScan",
+  "short_name": "SafeScan",
   "description": "Scan food barcodes for a score out of 10, every additive explained, healthier swaps and a personal diet score.",
   "start_url": "./",
   "scope": "./",
