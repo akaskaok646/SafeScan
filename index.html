@@ -222,7 +222,21 @@ nav button svg{width:23px;height:23px}
 .fact{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--lav2)}
 .fact i{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .seg{display:flex;gap:6px;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:16px;padding:5px;margin:0 0 14px;position:sticky;top:8px;z-index:20;backdrop-filter:blur(10px)}
-.seg button{flex:1;border:0;background:none;color:var(--muted);font-family:inherit;font-weight:700;font-size:12.5px;padding:10px 4px;border-radius:11px;cursor:pointer;white-space:nowrap}
+.seg{overflow-x:auto;scrollbar-width:none}.seg::-webkit-scrollbar{display:none}
+.seg button{flex:1 0 auto;border:0;background:none;color:var(--muted);font-family:inherit;font-weight:700;font-size:12.5px;padding:10px 8px;border-radius:11px;cursor:pointer;white-space:nowrap}
+.shopgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}.shopbtn{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text);text-decoration:none;font-weight:700;font-size:14px}.shopbtn span{opacity:.6}.shopbtn:first-child{grid-column:1/-1;background:rgba(124,58,237,.25)}
+.seg button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;padding:7px 2px;flex:1 1 0;min-width:0}.seg .ti{font-size:17px;line-height:1}
+.gtag{font-style:normal;font-size:10px;font-weight:800;background:var(--violet);color:#fff;padding:1px 6px;border-radius:6px;margin-left:4px;vertical-align:1px}.gsw{margin-top:10px}.gsw+.gsw{border-top:1px solid var(--line);padding-top:10px}.gsh{font-size:13px;color:var(--muted);margin-bottom:4px}.chip.on{background:var(--violet);color:#fff;border-color:transparent}
+.sublabel{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--lav);margin:6px 4px 10px}
+.card.best{border-color:rgba(34,197,94,.45);background:linear-gradient(180deg,rgba(34,197,94,.10),rgba(255,255,255,.03))}
+details.more summary,details.fold summary{cursor:pointer;list-style:none}details.more summary::-webkit-details-marker,details.fold summary::-webkit-details-marker{display:none}
+details.more{margin-top:10px}details.more summary{color:var(--muted);font-size:14px;font-weight:700;padding:6px 0}
+details.fold summary{display:flex;flex-direction:column;gap:4px;position:relative;padding-right:24px}details.fold summary:after{content:"›";position:absolute;right:4px;top:50%;transform:translateY(-50%) rotate(90deg);font-size:22px;color:var(--muted);transition:.2s}details.fold[open] summary:after{transform:translateY(-50%) rotate(-90deg)}
+.fsum{font-size:13px;color:var(--muted)}
+#welcome{position:fixed;inset:0;z-index:200;background:radial-gradient(ellipse at 50% 20%,#4C1D95,#130A24 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center;color:#fff}
+#welcome .wi{font-size:84px;margin-bottom:18px}#welcome h2{font-size:30px;margin-bottom:10px}#welcome p{color:var(--lav2);font-size:17px;line-height:1.45;max-width:320px}
+#welcome .dots{display:flex;gap:8px;margin:28px 0 22px}#welcome .dots i{width:8px;height:8px;border-radius:99px;background:rgba(255,255,255,.3)}#welcome .dots i.on{width:22px;background:#fff}
+#welcome .btn{max-width:320px}#welcome .skip{margin-top:12px;background:none;border:0;color:var(--muted);font:inherit;font-weight:700;padding:10px}
 .seg button.on{background:var(--violet);color:#fff;box-shadow:0 6px 18px rgba(124,58,237,.4)}
 .setrow{display:flex;gap:14px;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line)}
 .setrow:first-of-type{border-top:0}
@@ -794,7 +808,7 @@ function keyFacts(r){
   if(r.nova===4) f.push(["Ultra-processed","var(--amber)"]); else if(r.nova===1) f.push(["Unprocessed","var(--green)"]);
   return f.slice(0,3);
 }
-let RTAB="health";
+let RTAB="overview";
 function renderResult(entry, fromHistory, backTo){
   const r=analyse(entry); CUR=r; CUR.entry=entry; const b=BAND[r.band];
   const img = r.p.image_front_small_url||r.p.image_front_url||r.p.image_url;
@@ -804,8 +818,8 @@ function renderResult(entry, fromHistory, backTo){
   const backLbl={history:"History",scan:"Scan another",swaps:"Swaps",diet:"My diet"}[back]||"Back";
   const inDiet=dietState().items.some(x=>x.code===entry.code);
   const S=settings();
-  if(RTAB==="ethics"&&!S.ethics) RTAB="health";
-  const tabs=[["health","❤️ Health"],["ingredients","🧪 Ingredients"],["swaps","🔄 Swaps"]].concat(S.ethics?[["ethics","🌍 Ethics"]]:[]);
+  if(!["overview","ingredients","more"].includes(RTAB)) RTAB="overview";
+  const tabs=[["overview","⭐ Overview"],["ingredients","🧪 Ingredients"],["more","💷 Prices & brand"]];
   const el=document.getElementById("v-result");
   el.innerHTML = `
   <div class="rtop"><button class="back" onclick="show('${back}')">‹ ${backLbl}</button>
@@ -824,7 +838,7 @@ function renderResult(entry, fromHistory, backTo){
     </div>
     ${r.type==="food"&&r.score!=null?`<button class="btn btn-soft sm" id="dietBtn" style="margin-top:14px" onclick="addToDiet()">${inDiet?"✓ In your diet – change":"＋ Add to my diet"}</button>`:""}
   </div>
-  <div class="seg" role="tablist">${tabs.map(([k,l])=>`<button class="${RTAB===k?"on":""}" onclick="setRTab('${k}')">${l}</button>`).join("")}</div>
+  <div class="seg" role="tablist">${tabs.map(([k,l])=>{const i=l.indexOf(" ");return `<button class="${RTAB===k?"on":""}" onclick="setRTab('${k}')"><span class="ti">${l.slice(0,i)}</span>${l.slice(i+1)}</button>`}).join("")}</div>
   <div id="rpane"></div>
   <p class="foot">Data: ${entry.code.startsWith("demo")?"fictional demo product":esc(entry.source||"Open Food Facts (ODbL)")} · Barcode ${esc(entry.code)}<br>Information only, not medical advice.</p>`;
   drawPane();
@@ -837,9 +851,14 @@ function setRTab(k){ RTAB=k; document.querySelectorAll(".seg button").forEach(b=
 function drawPane(){
   const r=CUR, el=document.getElementById("rpane"); if(!el) return;
   if(RTAB==="ingredients") el.innerHTML=paneIngredients(r);
-  else if(RTAB==="swaps"){ el.innerHTML=paneSwaps(r); const box=document.getElementById("sw-"+r.entry.code); if(box&&r.score!=null&&r.score<7.5){ const c=swapCache(r.entry.code); if(c) drawSwaps(box,c); else loadSwaps(r.entry.code); } }
-  else if(RTAB==="ethics") { el.innerHTML='<div class="spinner sm"></div>'; renderEthics(r,el); }
-  else el.innerHTML=paneHealth(r);
+  else if(RTAB==="more"){ el.innerHTML=`<div class="sublabel">💷 Prices</div>${panePrices(r)}<div class="sublabel">🌍 Brand &amp; ethics</div><div id="ethbox"><div class="spinner sm"></div></div>`; loadPrices(r); renderEthics(r,document.getElementById("ethbox")); }
+  else { el.innerHTML=paneBest(r)+paneHealth(r); const box=document.getElementById("sw-"+r.entry.code); if(box){ const c=swapCache(r.entry.code); if(c) drawSwaps(box,c); else loadSwaps(r.entry.code); } }
+}
+// The one thing people want after a bad score: a better choice, right on the first screen
+function paneBest(r){
+  if(r.score==null||r.type!=="food") return "";
+  if(r.score>=7.5) return `<div class="card best ok"><div class="label">✅ Good choice</div><p class="desc">This scores ${r.score}/10 – no swap needed.</p></div>`;
+  return `<div class="card best"><div class="label">🔄 Better choice</div><div id="sw-${esc(r.entry.code)}" class="swlist" data-lim="1"></div></div>`;
 }
 function paneHealth(r){
   return `<div class="card"><div class="label">📝 Overview</div><p class="desc">${overallText(r)}</p></div>
@@ -869,6 +888,57 @@ function paneIngredients(r){
     ${r.allergens.length?`<div style="margin-top:12px"><div class="label" style="color:#FDBA74">⚠️ Allergens</div>${r.allergens.map(a=>`<span class="allergen">${esc(a)}</span>`).join("")}</div>`:""}
     ${r.p.ingredients_text?`<details style="margin-top:10px"><summary class="note" style="cursor:pointer">Full ingredient list</summary><p class="note" style="margin-top:6px">${esc(r.p.ingredients_text)}</p></details>`:""}
   </div>`;
+}
+/* ================= PRICES (Open Prices + shop search links) ================= */
+const ISO={"united-kingdom":"GB","united-states":"US",ireland:"IE",canada:"CA",australia:"AU",france:"FR",germany:"DE",spain:"ES",italy:"IT",india:"IN"};
+function myCountry(){ const c=settings().country; if(ISO[c]) return ISO[c]; const m=(navigator.language||"").match(/-([A-Z]{2})$/i); return m?m[1].toUpperCase():"GB"; }
+const SHOPS={
+  GB:[["Trolley (compares all)","https://www.trolley.co.uk/search/?q="],["Tesco","https://www.tesco.com/groceries/en-GB/search?query="],["Sainsbury's","https://www.sainsburys.co.uk/gol-ui/SearchResults/"],["Asda","https://groceries.asda.com/search/"],["Morrisons","https://groceries.morrisons.com/search?q="],["Aldi","https://www.aldi.co.uk/results?q="],["Waitrose","https://www.waitrose.com/ecom/shop/search?searchTerm="],["Ocado","https://www.ocado.com/search?entry="],["Iceland","https://www.iceland.co.uk/search?q="]],
+  US:[["Walmart","https://www.walmart.com/search?q="],["Target","https://www.target.com/s?searchTerm="],["Kroger","https://www.kroger.com/search?query="],["Amazon","https://www.amazon.com/s?k="]],
+  IE:[["Tesco Ireland","https://www.tesco.ie/groceries/en-IE/search?query="],["SuperValu","https://shop.supervalu.ie/sm/delivery/rsid/5550/results?q="],["Dunnes","https://www.dunnesstoresgrocery.com/sm/delivery/rsid/258/results?q="]]
+};
+const PRICE_CACHE={};
+function panePrices(r){
+  const cc=myCountry(), q=[r.p.brands&&r.p.brands.split(",")[0],r.p.product_name].filter(Boolean).join(" ").trim()||r.entry.code;
+  const shops=SHOPS[cc]||[["Google Shopping","https://www.google.com/search?tbm=shop&q="]];
+  return `<div class="card"><div class="label">💷 Prices people paid</div>
+    <p class="hint">Real prices shoppers logged on Open Prices, newest per shop</p>
+    <div id="pr-${esc(r.entry.code)}"><div class="spinner sm"></div></div></div>
+  <div class="card"><div class="label">🛒 Check it in shops</div><p class="hint">Opens each shop's search for this product</p>
+    <div class="shopgrid">${shops.map(([n,u])=>`<a class="shopbtn" href="${esc(u+encodeURIComponent(q))}" target="_blank" rel="noopener">${esc(n)} <span>↗</span></a>`).join("")}</div>
+    <p class="note" style="margin-top:8px">Prices, offers and loyalty-card deals change often – check the shop before you buy.</p></div>`;
+}
+function ago(d){ const days=Math.round((Date.now()-new Date(d))/864e5); if(days<1) return "today"; if(days<14) return days+" day"+(days>1?"s":"")+" ago"; if(days<60) return Math.round(days/7)+" weeks ago"; if(days<730) return Math.round(days/30)+" months ago"; return Math.round(days/365)+" years ago"; }
+function money(v,c){ try{ return new Intl.NumberFormat(undefined,{style:"currency",currency:c||"GBP"}).format(v); }catch(e){ return (+v).toFixed(2)+" "+(c||""); } }
+function kmBetween(a,b,c,d){ const R=6371,t=Math.PI/180,x=Math.sin((c-a)*t/2)**2+Math.cos(a*t)*Math.cos(c*t)*Math.sin((d-b)*t/2)**2; return 2*R*Math.asin(Math.sqrt(x)); }
+async function loadPrices(r, here){
+  const code=r.entry.code, box=document.getElementById("pr-"+code); if(!box) return;
+  if(code.startsWith("demo")){ box.innerHTML=`<p class="note">No prices for demo products.</p>`; return; }
+  let items=PRICE_CACHE[code];
+  if(!items){ try{ const j=await getJSON(`https://prices.openfoodfacts.org/api/v1/prices?product_code=${encodeURIComponent(code)}&order_by=-date&size=100`); items=PRICE_CACHE[code]=(j.items||[]).filter(x=>x.price!=null&&x.location&&!x.duplicate_of); }
+    catch(e){ box.innerHTML=`<p class="note">Couldn't reach Open Prices right now. Try again later, or use the shop links below.</p>`; return; } }
+  if(!document.getElementById("pr-"+code)) return;
+  const cc=myCountry(), local=items.filter(x=>(x.location.osm_address_country_code||"").toUpperCase()===cc);
+  const list=local.length?local:items;
+  if(!list.length){ box.innerHTML=`<p class="desc">No one has logged a price for this product yet.</p><p class="note" style="margin-top:6px">Use the shop buttons below to check prices.</p>`; return; }
+  // newest price per shop
+  const by={}; list.forEach(x=>{ const L=x.location, k=L.id; if(!by[k]||x.date>by[k].date) by[k]=x; });
+  let rows=Object.values(by).map(x=>({x,L:x.location,km:here&&x.location.osm_lat!=null?kmBetween(here[0],here[1],x.location.osm_lat,x.location.osm_lon):null}));
+  rows.sort(here?(a,b)=>(a.km??1e9)-(b.km??1e9):(a,b)=>a.x.price-b.x.price);
+  const cur=rows[0].x.currency, same=rows.filter(o=>o.x.currency===cur), min=Math.min(...same.map(o=>o.x.price));
+  const shown=rows.slice(0,12);
+  box.innerHTML=(local.length?"":`<p class="note" style="margin-bottom:8px">No prices logged in your country yet – showing other countries.</p>`)+
+    shown.map(o=>{const L=o.L,x=o.x,cheap=x.currency===cur&&x.price===min&&same.length>1;
+      return `<div class="item"><span class="dot" style="background:${cheap?"var(--green)":"var(--lav)"}"></span>
+      <div style="flex:1;min-width:0"><div class="t">${esc(L.osm_brand||L.osm_name||"Shop")}${cheap?`<em style="color:var(--green)">Cheapest</em>`:""}</div>
+      <div class="s">${esc([L.osm_address_city,local.length?"":L.osm_address_country].filter(Boolean).join(", "))}${o.km!=null?` · ${o.km<10?o.km.toFixed(1):Math.round(o.km)} km`:""} · ${ago(x.date)}${x.price_is_discounted?" · on offer":""}</div></div>
+      <b style="white-space:nowrap">${money(x.price,x.currency)}</b></div>`}).join("")+
+    (here?"":`<button class="btn btn-soft sm" style="margin-top:10px" onclick="pricesNearMe()">📍 Sort by nearest to me</button>`)+
+    `<p class="note" style="margin-top:8px">${list.length} price${list.length>1?"s":""} from Open Prices (ODbL). <a href="https://prices.openfoodfacts.org/products/${esc(code)}" target="_blank" rel="noopener" style="color:var(--lav)">See all ↗</a></p>`;
+}
+function pricesNearMe(){
+  if(!navigator.geolocation){ toast("Location isn't available on this device"); return; }
+  navigator.geolocation.getCurrentPosition(p=>loadPrices(CUR,[p.coords.latitude,p.coords.longitude]),()=>toast("Location permission was declined"),{maximumAge:6e5,timeout:1e4});
 }
 function paneSwaps(r){
   if(r.score==null) return `<div class="card"><p class="note">We need a score before we can suggest swaps.</p></div>`;
@@ -1048,6 +1118,7 @@ function dietState(){
   let d=null; try{ d=JSON.parse(localStorage.getItem(DKEY)||"null"); }catch(e){}
   d=d||window._diet||{}; d.items=d.items||[];
   d.profile=Object.assign({age:"",sex:"",height:"",weight:d.weight||"",activity:"light"},d.profile||{});
+  d.goals=Object.assign({preset:"",kcal:"",protein:"",sugars:"",sat:"",salt:"",fibre:""},d.goals||{});
   return d;
 }
 function saveDiet(d){ window._diet=d; try{ localStorage.setItem(DKEY,JSON.stringify(d)); }catch(e){} }
@@ -1083,40 +1154,69 @@ const NUT_TIPS={
  sugars:["Switch sugary drinks to no-added-sugar versions or water.","Go for plain yoghurt or cereal and add fruit.","Check labels – 5 g of sugar or less per 100 g is low."],
  salt:["Look for lower-salt versions of bread, sauces and snacks.","Flavour with herbs, spices, lemon or garlic instead of salt.","Processed meat, cheese and crisps are big salt sources – keep them smaller."],
  fibre:["Swap white bread, pasta and rice for wholegrain.","Add beans, lentils or chickpeas to meals.","Eat fruit and veg with their skins on, and add seeds or nuts."],
+ kcal:["Swap sugary drinks for water or no-added-sugar versions – they add calories without filling you up.","Choose lower-fat versions of foods you have every day.","Keep portion sizes of snacks and treats smaller rather than cutting meals."],
  protein:["Add eggs, beans, lentils, fish, chicken or tofu to meals.","Greek yoghurt or milk make easy protein snacks.","A palm-sized portion of protein at each meal adds up quickly."]
 };
+const GKEYS={kcal:["Calories","kcal","range"],protein:["Protein","g","min"],fibre:["Fibre","g","min"],sugars:["Sugar","g","max"],sat:["Saturated fat","g","max"],salt:["Salt","g","max"]};
+const PRESETS={lose:["⚖️ Lose weight"],muscle:["💪 Build muscle"],sugar:["🍬 Less sugar"],fibre:["🌾 More fibre"]};
+// Daily targets: standard guidance for this person, replaced by any goal they've set
+function targets(d){
+  const N=needs(d.profile), g=d.goals||{};
+  const T={kcal:N?N.kcal:2000,protein:N?N.protein:50,fibre:N?N.fibre:30,sugars:N?N.sugars:90,sat:N?N.sat:20,salt:N?N.salt:6}, mine={};
+  Object.keys(T).forEach(k=>{ const v=parseFloat(g[k]); if(v>0){ T[k]=v; mine[k]=true; } });
+  // safety floor: never aim below what your body burns at rest (or 85% of your needs if you're under 18)
+  const floor=N?(N.teen?Math.round(N.kcal*0.85):Math.max(1200,N.bmr)):1200; let floored=false;
+  if(T.kcal<floor){ T.kcal=floor; floored=true; }
+  return {T,mine,floored,floor};
+}
 function scoreDiet(d){
   const N=needs(d.profile), items=d.items.filter(x=>x.n), out={N,good:[],imp:[],issues:[],score:null,band:"grey"};
+  const TG=targets(d); out.lim=TG.T; out.mine=TG.mine; out.floored=TG.floored; out.floor=TG.floor;
   if(!items.length) return out;
   const {t,contrib}=dietTotals(items); out.t=t; out.contrib=contrib;
   // 1) product quality, weighted by how much energy each product gives you (4 points)
   let w=0,s=0; items.forEach((it,i)=>{ if(it.score==null) return; const wt=Math.max(contrib[i].kcal,10); w+=wt; s+=it.score*wt; });
   const quality=w?s/w:5;
-  // 2) nutrient balance against this person's needs, scaled to the energy logged (6 points)
-  const E=N?N.kcal:2000, kc=Math.max(t.kcal,1), scale=E/kc;    // "if your whole diet looked like this"
-  const proj={sat:t.sat*scale,sugars:t.sugars*scale,salt:t.salt*scale,fibre:t.fibre*scale,protein:t.protein*scale};
-  const lim={sat:N?N.sat:20,sugars:N?N.sugars:90,salt:N?N.salt:6,fibre:N?N.fibre:30,protein:N?N.protein:50};
-  const over=k=>1.2*Math.max(0,Math.min(1,2-proj[k]/lim[k])), under=k=>1.2*Math.min(1,proj[k]/lim[k]);
-  const pts={sat:over("sat"),sugars:over("sugars"),salt:over("salt"),fibre:under("fibre"),protein:under("protein")};
+  // 2) your average day against your targets (1 point each, 6 points)
+  const L=TG.T, r=k=>t[k]/L[k];
+  const pts={ kcal:Math.max(0,1-Math.max(0,Math.abs(r("kcal")-1)-0.1)*2.5),
+    sat:Math.max(0,Math.min(1,2-r("sat"))), sugars:Math.max(0,Math.min(1,2-r("sugars"))), salt:Math.max(0,Math.min(1,2-r("salt"))),
+    fibre:Math.min(1,r("fibre")), protein:Math.min(1,r("protein")) };
   out.score=Math.round(Math.min(10,quality*0.4+Object.values(pts).reduce((a,b)=>a+b,0))*10)/10;
-  out.band=bandOf(out.score); out.quality=Math.round(quality*10)/10; out.proj=proj; out.lim=lim;
-  const nm={sat:"saturated fat",sugars:"sugar",salt:"salt",fibre:"fibre",protein:"protein"};
+  out.band=bandOf(out.score); out.quality=Math.round(quality*10)/10;
+  const nm={kcal:"calories",sat:"saturated fat",sugars:"sugar",salt:"salt",fibre:"fibre",protein:"protein"};
+  const tag=k=>TG.mine[k]?"your goal":"your limit";
   const src=k=>{ const s=topSources(contrib,k); return s.length?` Biggest sources: ${listJoin(s.map(x=>x.name))}.`:""; };
+  const big=()=>contrib.slice().sort((a,b)=>b.kcal-a.kcal).slice(0,2).map(x=>x.code);
+  const kr=r("kcal");
+  if(kr>1.1){ out.imp.push(`Calories are above ${TG.mine.kcal?"your goal":"what you need"} – about ${Math.round(t.kcal)} kcal a day against ${L.kcal}.${src("kcal")}`); out.issues.push({k:"kcal",label:"calories",codes:topSources(contrib,"kcal").map(x=>x.code)}); }
+  else if(kr<0.8) out.imp.push(`Your list adds up to about ${Math.round(t.kcal)} kcal a day – less than ${L.kcal}. If that's not everything you eat on a normal day, add the rest for an accurate score.`);
+  else out.good.push(`Calories are on target (about ${Math.round(t.kcal)} of ${L.kcal} kcal a day).`);
   ["sat","sugars","salt"].forEach(k=>{
-    const r=proj[k]/lim[k];
-    if(r<=1) out.good.push(`${cap(nm[k])} is within your limit (about ${fmt(proj[k])} g of ${lim[k]} g a day).`);
-    else { out.imp.push(`${cap(nm[k])} is too high – about ${fmt(proj[k])} g a day against a limit of ${lim[k]} g for you.${src(k)}`); out.issues.push({k,label:nm[k],codes:topSources(contrib,k).map(x=>x.code)}); }
+    if(r(k)<=1) out.good.push(`${cap(nm[k])} is within ${tag(k)} (about ${fmt(t[k])} g of ${L[k]} g a day).`);
+    else { out.imp.push(`${cap(nm[k])} is over ${tag(k)} – about ${fmt(t[k])} g a day against ${L[k]} g.${src(k)}`); out.issues.push({k,label:nm[k],codes:topSources(contrib,k).map(x=>x.code)}); }
   });
   ["fibre","protein"].forEach(k=>{
-    const r=proj[k]/lim[k];
-    if(r>=0.9) out.good.push(`You're getting enough ${nm[k]} (about ${fmt(proj[k])} g of ${lim[k]} g a day).`);
-    else { out.imp.push(`${cap(nm[k])} is low – about ${fmt(proj[k])} g a day, but you need around ${lim[k]} g.`); out.issues.push({k,label:nm[k],codes:[]}); }
+    if(r(k)>=0.9) out.good.push(`You're hitting ${TG.mine[k]?"your "+nm[k]+" goal":"enough "+nm[k]} (about ${fmt(t[k])} g of ${L[k]} g a day).`);
+    else { out.imp.push(`${cap(nm[k])} is low – about ${fmt(t[k])} g a day, but ${TG.mine[k]?"your goal is":"you need around"} ${L[k]} g.`); out.issues.push({k,label:nm[k],codes:big()}); }
   });
   const low=items.filter(x=>x.score!=null&&x.score<5);
   if(!low.length) out.good.push("All your products score 5 or more 🛒");
   else out.imp.push(`${pl(low.length,"product")} you eat score${low.length===1?"s":""} under 5: ${listJoin(low.map(x=>x.name))}.`);
-  out.coverage=N?t.kcal/N.kcal:null;
+  out.coverage=t.kcal/L.kcal;
   return out;
+}
+function setGoal(k,v){ const d=dietState(); d.goals[k]=v; d.goals.preset=""; saveDiet(d); window._gsw=null; renderDiet(true); }
+function clearGoals(){ const d=dietState(); d.goals={preset:"",kcal:"",protein:"",sugars:"",sat:"",salt:"",fibre:""}; saveDiet(d); window._gsw=null; renderDiet(true); }
+function setPreset(p){
+  const d=dietState(), N=needs(d.profile); if(!N){ toast("Fill in “About you” first"); return; }
+  if(d.goals.preset===p){ clearGoals(); return; }
+  const g={preset:p,kcal:"",protein:"",sugars:"",sat:"",salt:"",fibre:""};
+  if(p==="lose"){ g.kcal=String(Math.max(Math.round((N.kcal-400)/10)*10,1200,N.bmr)); g.protein=String(Math.round(+d.profile.weight*1.2)); }
+  if(p==="muscle"){ g.kcal=String(N.kcal+250); g.protein=String(Math.round(+d.profile.weight*1.6)); }
+  if(p==="sugar") g.sugars=String(Math.round(N.sugars*0.6));
+  if(p==="fibre") g.fibre=String(N.fibre+5);
+  d.goals=g; saveDiet(d); window._gsw=null; renderDiet(true);
 }
 function setProfile(k,v){ const d=dietState(); d.profile[k]=v; if(k==="weight") d.weight=v; saveDiet(d); renderDiet(true); }
 function setPortion(code,v){ const d=dietState(), it=d.items.find(x=>x.code===code); const g=parseFloat(v); if(it&&g>0&&g<=5000){ it.portion=g; saveDiet(d); renderDiet(true); } }
@@ -1149,10 +1249,10 @@ function cancelAdd(){ window.addMode=null; show("diet"); }
 function quickAdd(code){ const h=getHistory().find(x=>x.entry.code===code); if(!h) return; CUR=analyse(h.entry); CUR.entry=h.entry; window._backToDiet=true; addToDiet(); }
 function toast(t){ const el=document.getElementById("toast"); el.textContent=t; el.classList.add("on"); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove("on"),1800); }
 function ring(score,band){ const b=BAND[band]; return `<div class="ring" style="--p:${score==null?0:score*10};--c:${b.c}"><div><b style="color:${b.c}">${score==null?"–":score}</b><small>out of 10</small></div></div>`; }
-function meter(label,val,lim,kind){
-  const r=lim?val/lim:0, pct=Math.min(100,r*100);
-  const col= kind==="max" ? (r<=1?"var(--green)":r<=1.5?"var(--amber)":"var(--red)") : (r>=0.9?"var(--green)":r>=0.6?"var(--amber)":"var(--red)");
-  return `<div class="meter"><div class="mt"><span>${label}</span><b>${fmt(val)} / ${lim} g</b></div><div class="mb"><i style="width:${pct}%;background:${col}"></i>${kind==="max"?'<u></u>':""}</div></div>`;
+function meter(label,val,lim,kind,unit="g",mine){
+  const r=lim?val/lim:0, pct=Math.min(100,r*100/(kind==="range"?1.25:1));
+  const col= kind==="max" ? (r<=1?"var(--green)":r<=1.5?"var(--amber)":"var(--red)") : kind==="range" ? (Math.abs(r-1)<=0.1?"var(--green)":Math.abs(r-1)<=0.25?"var(--amber)":"var(--red)") : (r>=0.9?"var(--green)":r>=0.6?"var(--amber)":"var(--red)");
+  return `<div class="meter"><div class="mt"><span>${label}${mine?' <em class="gtag">goal</em>':""}</span><b>${unit==="kcal"?Math.round(val):fmt(val)} / ${lim} ${unit}</b></div><div class="mb"><i style="width:${pct}%;background:${col}"></i>${kind==="max"?'<u></u>':kind==="range"?'<u style="left:80%"></u>':""}</div></div>`;
 }
 function renderDiet(keepScroll){
   const y=window.scrollY, d=dietState(), pr=d.profile, r=scoreDiet(d), N=r.N, el=document.getElementById("v-diet");
@@ -1164,13 +1264,17 @@ function renderDiet(keepScroll){
   ${r.score!=null?`<div class="card hero-res" style="--bc:${BAND[r.band].c}">
     <div class="scorebox" style="margin-top:0">${ring(r.score,r.band)}
       <div><div class="bandname" style="color:${BAND[r.band].c}">${{green:"Great diet",yellow:"Good diet",amber:"Room to improve",red:"Needs work"}[r.band]}</div>
-      <p class="note" style="margin-top:6px">Product quality ${r.quality}/10 · ${pl(d.items.length,"product")}${r.coverage!=null&&r.coverage<0.25?`<p class="note" style="margin-top:4px;color:#FDBA74">Early estimate – add more of what you eat</p>`:""}</p></div></div>
-    <div class="label" style="margin-top:16px">A day of eating like this${N?" – for you":""}</div>
-    ${meter("Saturated fat",r.proj.sat,r.lim.sat,"max")}${meter("Sugars",r.proj.sugars,r.lim.sugars,"max")}${meter("Salt",r.proj.salt,r.lim.salt,"max")}${meter("Fibre",r.proj.fibre,r.lim.fibre,"min")}${meter("Protein",r.proj.protein,r.lim.protein,"min")}
-    <p class="note" style="margin-top:8px">${N?`Your products give about ${Math.round(r.t.kcal)} kcal a day – ${Math.round(r.coverage*100)}% of your estimated ${N.kcal} kcal. Bars show what a full day would look like if all your food were like this.${r.coverage<0.5?" Add more of what you eat for a fuller picture.":""}`:"Fill in “About you” below to make these targets personal (using standard adult limits for now)."}</p>
+      <p class="note" style="margin-top:6px">Product quality ${r.quality}/10 · ${pl(d.items.length,"product")}${r.coverage<0.5?`<p class="note" style="margin-top:4px;color:#FDBA74">Your list looks like less than a full day – add everything you usually eat</p>`:""}</p></div></div>
+    <div class="label" style="margin-top:16px">Your average day</div>
+    ${Object.entries(GKEYS).map(([k,[l,u,kind]])=>meter(l,r.t[k],r.lim[k],kind,u,r.mine[k])).join("")}
+    <p class="note" style="margin-top:8px">We treat your list as everything you eat on an average day.${N?"":" Fill in “About you” below to make the targets personal (using standard adult amounts for now)."}</p>
   </div>
-  <div class="card"><div class="label">✅ What's working well</div>${r.good.length?r.good.map(g=>`<div class="li good">${esc(g)}</div>`).join(""):`<p class="note">Nothing yet – small swaps add up quickly.</p>`}</div>
-  <div class="card"><div class="label">🎯 What could improve</div>${r.imp.length?r.imp.map(g=>`<div class="li imp">${esc(g)}</div>`).join("")+`<button class="btn btn-primary sm" style="margin-top:12px" onclick="show('swaps')">See swaps & tips →</button>`:`<p class="note">Nothing major – nice work!</p>`}</div>`
+  <div class="card"><div class="label">🎯 What to work on</div>${r.imp.length?r.imp.map(g=>`<div class="li imp">${esc(g)}</div>`).join(""):`<p class="note">Nothing major – nice work!</p>`}
+    ${r.good.length?`<details class="more"><summary>✅ What's going well (${r.good.length})</summary>${r.good.map(g=>`<div class="li good">${esc(g)}</div>`).join("")}</details>`:""}
+    ${r.imp.length?`<button class="btn btn-soft sm" style="margin-top:12px" onclick="show('swaps')">More swaps & tips →</button>`:""}</div>
+  ${r.issues.length?`<div class="card"><div class="label">🔄 Swaps to hit your ${Object.keys(r.mine).length?"goals":"targets"}</div>
+    <p class="hint">Similar products that move you closer, at the same amount you have now</p>
+    <div id="gswaps">${window._gsw?drawGoalSwaps(window._gsw):`<button class="btn btn-primary sm" onclick="loadGoalSwaps()">Find swaps</button>`}</div></div>`:""}`
   :`<div class="card hero"><div style="font-size:40px">🥗</div><h2>Build your diet</h2><p>Scan or pick the foods and drinks you have regularly. We'll add them up and score your diet against what your body needs.</p></div>`}
 
   <div class="card"><div class="label">🛒 Foods & drinks I have</div>
@@ -1185,7 +1289,8 @@ function renderDiet(keepScroll){
     ${recent.length?`<div class="label" style="margin-top:16px">Add from recent scans</div><div class="chips">${recent.map(h=>`<button class="chip" onclick="quickAdd('${esc(h.entry.code)}')">＋ ${esc((h.entry.product.product_name||"Product").slice(0,28))}</button>`).join("")}</div>`:""}
   </div>
 
-  <div class="card"><div class="label">👤 About you</div>
+  <details class="card fold" ${N?"":"open"}><summary><span class="label" style="margin:0">👤 About you & goals</span><span class="fsum">${N?`${esc(pr.age)} · ${pr.sex==="m"?"male":"female"} · ${esc(pr.height)} cm · ${esc(pr.weight)} kg${Object.keys(r.mine).length?" · goals set":""}`:"Tap to set up"}</span></summary>
+  <div style="margin-top:12px">
     <p class="note" style="margin-bottom:12px">Used to estimate your daily needs and additive safe limits. Stays on your phone.</p>
     <div class="form2">
       <label>Age<input type="number" inputmode="numeric" value="${esc(pr.age)}" onchange="setProfile('age',this.value)"></label>
@@ -1198,10 +1303,76 @@ function renderDiet(keepScroll){
       <div class="ngrid"><div><b>${N.kcal}</b><span>kcal energy</span></div><div><b>${N.protein} g</b><span>protein (at least)</span></div><div><b>${N.fibre} g</b><span>fibre (aim for)</span></div>
       <div><b>${N.sat} g</b><span>sat fat (max)</span></div><div><b>${N.freeSugar} g</b><span>added sugar (max)</span></div><div><b>${N.salt} g</b><span>salt (max)</span></div></div>
       <p class="note" style="margin-top:8px">Energy uses the Mifflin–St Jeor equation × your activity level. Limits follow UK (SACN/NHS) guidance.${N.teen?" Teenagers' needs change with growth, so treat these as rough.":""}</p></div>`:""}
-  </div>
+    <div style="margin-top:18px">${goalsCard(d,r).replace('<div class="card">','<div>')}</div>
+  </div></details>
   <p class="foot">A rough guide, not medical or dietary advice – everyone's needs differ. Talk to a GP or dietitian before making big changes.</p>`;
   if(keepScroll) window.scrollTo(0,y);
 }
+
+function goalsCard(d,r){
+  const g=d.goals, N=r.N, has=Object.keys(r.mine).length;
+  return `<div class="card"><div class="label">🎯 My goals <span style="opacity:.6;text-transform:none;letter-spacing:0">(optional)</span></div>
+    <p class="note" style="margin-bottom:10px">Leave blank to use the standard guidance for you. Pick a quick goal or type your own.</p>
+    <div class="chips">${Object.entries(PRESETS).filter(([k])=>!(k==="lose"&&N&&N.teen)).map(([k,[l]])=>`<button class="chip ${g.preset===k?"on":""}" onclick="setPreset('${k}')">${l}</button>`).join("")}</div>
+    <div class="form2" style="margin-top:12px">${Object.entries(GKEYS).map(([k,[l,u,kind]])=>`<label>${l} ${kind==="max"?"max":kind==="min"?"min":""} (${u})<input type="number" inputmode="decimal" placeholder="${r.lim&&!r.mine[k]?r.lim[k]:""}" value="${esc(g[k])}" onchange="setGoal('${k}',this.value)"></label>`).join("")}</div>
+    ${r.floored?`<p class="note" style="margin-top:8px;color:#FDBA74">We don't set calorie goals below ${r.floor} kcal for you – eating too little slows growth and recovery.</p>`:""}
+    ${N&&N.teen?`<p class="note" style="margin-top:8px">Under 18? Your body is still growing, so focus on food quality rather than cutting calories. Talk to a GP before trying to lose weight.</p>`:""}
+    ${has?`<button class="btn btn-soft sm" style="margin-top:10px" onclick="clearGoals()">Clear goals</button>`:""}</div>`;
+}
+const GFIELD={kcal:"energy-kcal_100g",sugars:"sugars_100g",sat:"saturated-fat_100g",salt:"salt_100g",protein:"proteins_100g",fibre:"fiber_100g"};
+async function loadGoalSwaps(){
+  const box=document.getElementById("gswaps"); if(!box) return;
+  const d=dietState(), r=scoreDiet(d); box.innerHTML='<div class="spinner sm"></div><p class="note" style="text-align:center">Looking for products that fit your goals…</p>';
+  const ctry=COUNTRIES[settings().country][1]?"&countries_tags="+COUNTRIES[settings().country][1]:"";
+  const res=[], used=new Set(); let reached=false;
+  for(const is of r.issues.slice(0,4)){
+    const up=["protein","fibre"].includes(is.k), f=GFIELD[is.k];
+    for(const code of is.codes){
+      const it=d.items.find(x=>x.code===code); if(!it||!it.n||used.has(code)) continue;
+      const nk={kcal:"kcal",sugars:"sug",sat:"sat",salt:"salt",protein:"pro",fibre:"fib"}[is.k], cur=+(it.n[nk]||0);
+      const ck="ffs_sw_g_"+code+"_"+is.k; let list=null;
+      try{ const v=JSON.parse(localStorage.getItem(ck)||"null"); if(v&&Date.now()-v.t<7*864e5) list=v.list; }catch(e){}
+      if(!list){
+        list=[]; const cats=(it.cats||[]).slice().reverse().slice(0,2), seen=new Set();
+        for(const c of cats){ for(const cc of [...new Set([ctry,""])]){
+          try{ const j=await getJSON(`https://world.openfoodfacts.org/api/v2/search?categories_tags=${encodeURIComponent(c)}${cc}&fields=code,${FIELDS}&page_size=50&sort_by=unique_scans_n`); reached=true;
+            for(const p of (j.products||[])){ const v=p.nutriments&&p.nutriments[f]; if(!p.code||p.code===code||seen.has(p.code)||!p.product_name||v==null) continue; seen.add(p.code);
+              const better=up?v>=Math.max(cur*1.25,cur+2):v<=cur*0.8; if(!better) continue;
+              const a=analyse({product_type:"food",product:p}); if(a.score==null||a.score<Math.max(it.score||0,4)-0.3) continue;
+              delete p.ingredients; list.push({code:p.code,score:a.score,band:a.band,product:p,v}); }
+          }catch(e){} }
+          if(list.length>=3) break; }
+        list.sort((a,b)=>up?b.v-a.v:a.v-b.v); list=list.slice(0,2);
+        try{ localStorage.setItem(ck,JSON.stringify({t:Date.now(),list})); }catch(e){}
+      } else reached=true;
+      if(list.length){ used.add(code); const mult=(it.portion||100)/100*perWeek(it)/7;
+        res.push({k:is.k,label:is.label,up,from:it.name,fromScore:it.score,opts:list.map(x=>Object.assign({},x,{delta:(x.v-cur)*mult}))}); break; }
+    }
+  }
+  if(!reached&&!res.length){ box.innerHTML=`<p class="note">Couldn't reach the database – check your connection.</p><button class="btn btn-soft sm" onclick="loadGoalSwaps()">Try again</button>`; return; }
+  window._gsw=res; box.innerHTML=drawGoalSwaps(res);
+}
+function drawGoalSwaps(res){
+  window._swaps=window._swaps||{}; res.forEach(g=>g.opts.forEach(x=>window._swaps[x.code]=x));
+  if(!res.length) return `<p class="note">No clear swaps found for your products yet – the tips in Swaps can still help.</p>`;
+  return res.map(g=>`<div class="gsw"><div class="gsh">${g.up?"⬆":"⬇"} ${cap(g.label)} · instead of <b>${esc(g.from)}</b></div>
+    ${g.opts.map(x=>`<div class="swap" onclick="openSwap('${esc(x.code)}')"><div class="hthumb sm">${x.product.image_front_small_url?`<img src="${esc(x.product.image_front_small_url)}" alt="" onerror="this.parentNode.textContent='🛒'">`:"🛒"}</div>
+      <div class="hinfo"><div class="n">${esc(x.product.product_name)}</div><div class="d" style="color:var(--green);font-weight:700">${x.delta>0?"+":"−"}${g.k==="kcal"?Math.round(Math.abs(x.delta)):fmt(Math.abs(x.delta))} ${g.k==="kcal"?"kcal":"g "+g.label} a day</div></div>
+      <div class="hscore" style="background:${BAND[x.band].c}">${x.score}</div><span class="chev">›</span></div>`).join("")}</div>`).join("")+
+    `<button class="btn btn-soft sm" style="margin-top:8px" onclick="window._gsw=null;loadGoalSwaps()">Refresh</button>`;
+}
+
+const WELCOME=[["📷","Scan any barcode","Point your camera at a food, drink or product – or upload a photo of the barcode."],
+ ["🎯","Get a score out of 10","See what's really in it: every additive rated, sugar, salt and fat explained in plain words."],
+ ["🔄","Find a better choice","SafeScan suggests a similar product that scores higher – and builds you a healthier diet over time."]];
+function welcome(i=0){
+  let el=document.getElementById("welcome"); if(!el){ el=document.createElement("div"); el.id="welcome"; document.body.appendChild(el); }
+  if(i>=WELCOME.length){ el.remove(); try{ localStorage.setItem("ffs_welcomed","1"); }catch(e){} return; }
+  const [ic,h,t]=WELCOME[i];
+  el.innerHTML=`<div class="wi">${ic}</div><h2>${h}</h2><p>${t}</p><div class="dots">${WELCOME.map((_,k)=>`<i class="${k===i?"on":""}"></i>`).join("")}</div>
+    <button class="btn btn-primary" onclick="welcome(${i+1})">${i<WELCOME.length-1?"Next":"Start scanning"}</button>${i<WELCOME.length-1?`<button class="skip" onclick="welcome(99)">Skip</button>`:""}`;
+}
+setTimeout(()=>{ let seen=false; try{ seen=!!localStorage.getItem("ffs_welcomed")||(localStorage.getItem("purplescan_history_v1")||"[]").length>2; }catch(e){} if(!seen) welcome(0); },50);
 
 /* ================= SWAPS ================= */
 function swapCache(code,val){ const k="ffs_sw_"+code; try{ if(val===undefined){ const v=JSON.parse(localStorage.getItem(k)||"null"); return v&&Date.now()-v.t<7*864e5?v.list:null; } localStorage.setItem(k,JSON.stringify({t:Date.now(),list:val})); }catch(e){ return null; } }
@@ -1237,11 +1408,13 @@ async function loadSwaps(code){
 }
 function drawSwaps(box,list){
   if(!box) return; window._swaps=window._swaps||{}; list.forEach(x=>window._swaps[x.code]=x);
+  const lim=+box.dataset.lim||0, all=list; if(lim) list=list.slice(0,lim);
   box.innerHTML = list.length? list.map(x=>`<div class="swap" onclick="openSwap('${esc(x.code)}')">
      <div class="hthumb sm">${x.product.image_front_small_url?`<img src="${esc(x.product.image_front_small_url)}" alt="" onerror="this.parentNode.textContent='🛒'">`:"🛒"}</div>
      <div class="hinfo"><div class="n">${esc(x.product.product_name)}</div><div class="d">${esc(x.product.brands||"")}</div></div>
      <div class="hscore" style="background:${BAND[x.band].c}">${x.score}</div><span class="chev">›</span></div>`).join("")
    : '<p class="note">No clearly better products found in this category yet.</p>';
+  if(lim&&all.length>lim) box.innerHTML+=`<button class="btn btn-soft sm" style="margin-top:8px" onclick="const b=this.parentNode;b.dataset.lim=0;drawSwaps(b,swapCache('${esc(all[0]?CUR.entry.code:"")}')||[])">Show ${all.length-lim} more</button>`;
 }
 function openSwap(code){ const x=(window._swaps||{})[code]; if(x) renderResult({code,product_type:"food",product:x.product,source:"Open Food Facts (ODbL)"},false,"swaps"); }
 function swapCard(code,why){
@@ -1317,8 +1490,6 @@ function setSetting(k,v){ const s=settings(); s[k]=v; saveSettings(s); if(k==='c
 function renderSettings(){
   const s=settings(), el=document.getElementById("settingsCard"); if(!el) return;
   el.innerHTML=`<div class="label">⚙️ Settings</div>
-   <div class="setrow"><div><b>🌍 Ethics mode</b><small>Show who owns each brand, certifications, environmental grade and documented company concerns. Doesn't change the health score.</small></div>
-     <button class="toggle ${s.ethics?"on":""}" role="switch" aria-checked="${s.ethics}" onclick="setSetting('ethics',${!s.ethics})"><i></i></button></div>
    <div class="setrow"><div><b>📍 Your country</b><small>Used for local rules on additives and to find swaps sold near you.</small></div>
      <select onchange="setSetting('country',this.value)">${Object.entries(COUNTRIES).map(([k,[l]])=>`<option value="${k}" ${s.country===k?"selected":""}>${l}</option>`).join("")}</select></div>`;
 }
@@ -1458,7 +1629,7 @@ async function renderEthics(r,el){
     if(!brand){ const n=document.getElementById("ownerLoading"); if(n) n.textContent="The brand isn't listed for this product."; return; }
     try{
       const w=await wikidataOwner(brand);
-      if(RTAB!=="ethics"||CUR!==r) return;
+      if(RTAB!=="more"||CUR!==r) return;
       if(w&&w.chain.length){ const top=w.chain[w.chain.length-1];
         const key=Object.keys(COMPANIES).find(k=>top.toLowerCase().includes(COMPANIES[k].name.toLowerCase().replace(/[, ].*$/,"").toLowerCase()));
         company=key?COMPANIES[key]:null;
@@ -1676,7 +1847,7 @@ function clearHist(){
 }
 
 /* ================= FREE SCANS + UNLOCK ================= */
-const CFG=Object.assign({PAY_LINK:"",PRICE:"£3.99",FREE_SCANS:3,UNLOCK_HASH:""},window.FFS_CONFIG||{});
+const CFG=Object.assign({PAY_LINK:"",PRICE:"£3.99",FREE_SCANS:5,UNLOCK_HASH:""},window.FFS_CONFIG||{});
 let memUsed=[], memUnlocked=false;
 function usedCodes(){ try{ return JSON.parse(localStorage.getItem("ffs_used")||"[]"); }catch(e){ return memUsed; } }
 // Unlocks are tied to this device's ID. (v2: earlier test unlocks were reset.)

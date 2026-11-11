@@ -1,5 +1,5 @@
 // Free Food Scan service worker – makes the app installable and work offline.
-const CACHE = "ffs-v7";
+const CACHE = "ffs-v12";
 const SHELL = ["./", "index.html", "config.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 const LIBS = ["https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"];
 
